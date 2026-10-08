@@ -2,7 +2,7 @@ import { z } from "zod";
 import { isUniqueViolation, sysDb } from "../db";
 import { AppError, conflict, notFound } from "../errors";
 import { newToken, sha256, verifyPassword } from "../auth/password";
-import { enqueueEmails, flushOutbox } from "../mail/outbox";
+import { deliverNow, enqueueEmails } from "../mail/outbox";
 import { invite } from "../mail/templates";
 
 const email = z.string().trim().toLowerCase().email().max(254);
@@ -32,19 +32,24 @@ export async function updateTenantAdmin(actorId: string, userId: string, input: 
   }
 }
 
-/** Emails a fresh 7-day "choose your password" link (previous unused links are revoked). */
+/** Emails a fresh 7-day "choose your password" link (previous unused links are revoked). Throws if the email could not be sent. */
 export async function sendSetupLink(actorId: string, userId: string) {
   const db = sysDb();
   const user = await db.user.findFirst({ where: { id: userId, role: "TENANT_ADMIN" }, include: { tenant: { select: { name: true } } } });
   if (!user) throw notFound("School admin");
   const raw = newToken();
+  const dedupeKey = `invite:${user.id}:${sha256(raw).slice(0, 12)}`;
   await db.$transaction(async (tx) => {
     await tx.passwordToken.updateMany({ where: { userId: user.id, usedAt: null }, data: { usedAt: new Date() } });
     await tx.passwordToken.create({ data: { userId: user.id, tokenHash: sha256(raw), expiresAt: new Date(Date.now() + 7 * 86_400_000) } });
-    await enqueueEmails(tx, [{ tenantId: user.tenantId, to: user.email, kind: "INVITE", dedupeKey: `invite:${user.id}:${sha256(raw).slice(0, 12)}`, ...invite({ name: user.fullName, school: user.tenant?.name ?? "Bibliotek", token: raw }) }]);
+    await enqueueEmails(tx, [{ tenantId: user.tenantId, to: user.email, kind: "INVITE", dedupeKey, ...invite({ name: user.fullName, school: user.tenant?.name ?? "Bibliotek", token: raw }) }]);
     await tx.auditLog.create({ data: { tenantId: user.tenantId, userId: actorId, action: "SETUP_LINK_SENT", details: { targetUserId: user.id } } });
   });
-  await flushOutbox(10).catch((e) => console.error("[invite] immediate send failed; outbox job will retry", e));
+  const r = await deliverNow(dedupeKey);
+  if (!r.sent) {
+    throw new AppError("EMAIL_NOT_SENT", `The link was created but the email to ${user.email} could not be sent: ${r.error}. It will be retried automatically once email is fixed.`, 502);
+  }
+  return { email: user.email };
 }
 
 /** The signed-in operator edits their own profile. Changing the email requires the current password. */
