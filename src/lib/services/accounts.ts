@@ -1,11 +1,13 @@
 import { z } from "zod";
+import { createHmac, randomInt, timingSafeEqual } from "node:crypto";
 import type { Role } from "@prisma/client";
 import { isUniqueViolation, sysDb, withTenant } from "../db";
 import { AppError, conflict, notFound } from "../errors";
 import { audit } from "../audit";
 import { dummyHash, hashPassword, newToken, sha256, verifyPassword } from "../auth/password";
-import { enqueueEmails } from "../mail/outbox";
-import { invite } from "../mail/templates";
+import { enqueueEmails, flushOutbox } from "../mail/outbox";
+import { invite, resetOtp } from "../mail/templates";
+import { env } from "../env";
 import { assertCapacity } from "./licensing";
 
 export const passwordSchema = z.string().min(10, "Use at least 10 characters").max(200);
@@ -113,6 +115,12 @@ export async function redeemToken(rawToken: string, password: string) {
 
 /** Staff-created accounts (admin/librarian) get an invite rather than a password chosen by someone else. */
 export async function createStaffAccount(tenantId: string, tenantName: string, actorId: string, input: { email: string; fullName: string; role: "LIBRARIAN" | "TENANT_ADMIN" }) {
+  const user = await createStaffAccountTx(tenantId, tenantName, actorId, input);
+  await flushOutbox(10).catch((e) => console.error("[invite] immediate send failed; outbox job will retry", e));
+  return user;
+}
+
+async function createStaffAccountTx(tenantId: string, tenantName: string, actorId: string, input: { email: string; fullName: string; role: "LIBRARIAN" | "TENANT_ADMIN" }) {
   return withTenant(tenantId, async (tx) => {
     try {
       const user = await tx.user.create({
@@ -128,4 +136,88 @@ export async function createStaffAccount(tenantId: string, tenantName: string, a
       throw e;
     }
   });
+}
+
+// --- Forgot password (email OTP) -----------------------------------------------------------------------------
+
+const OTP_TTL_MS = 10 * 60_000;
+const OTP_MAX_ATTEMPTS = 5;
+const OTP_RESEND_COOLDOWN_MS = 60_000;
+
+export const forgotSchema = z.object({ email: z.string().trim().toLowerCase().email().max(254) });
+export const resetSchema = z.object({
+  email: z.string().trim().toLowerCase().email().max(254),
+  code: z.string().trim().regex(/^\d{6}$/, "Enter the 6-digit code"),
+  password: passwordSchema,
+});
+
+const GENERIC_SENT = "If an account exists for that email, we've sent a 6-digit verification code. It expires in 10 minutes.";
+const BAD_CODE = new AppError("BAD_CODE", "That code is invalid or has expired. Request a new one.", 400);
+
+// Keyed hash: a leaked DB row cannot be brute-forced offline without AUTH_SECRET (a 6-digit space is otherwise trivial).
+const hashOtp = (userId: string, code: string) => createHmac("sha256", env().AUTH_SECRET).update(`otp:${userId}:${code}`).digest("hex");
+
+/** The env-managed platform operator is reset by changing SUPERADMIN_PASSWORD; an OTP reset would be overwritten at next boot. */
+const isEnvManagedOperator = (email: string) => !!process.env.SUPERADMIN_EMAIL && process.env.SUPERADMIN_EMAIL.trim().toLowerCase() === email;
+
+/**
+ * Step 1. ALWAYS returns the same message so the form cannot be used to discover which emails have accounts.
+ * A code is only sent to an active account of a non-suspended school; at most one per minute per account.
+ */
+export async function requestPasswordReset(rawEmail: string, ip?: string | null) {
+  const { email } = forgotSchema.parse({ email: rawEmail });
+  throttle(`forgot|${ip ?? "?"}|${email}`, 5);
+
+  const db = sysDb();
+  const user = await db.user.findUnique({ where: { email }, include: { tenant: { select: { isSuspended: true } } } });
+  if (!user || user.status !== "ACTIVE" || user.tenant?.isSuspended || isEnvManagedOperator(email)) return { ok: true, message: GENERIC_SENT };
+
+  const latest = await db.passwordResetOtp.findFirst({ where: { userId: user.id }, orderBy: { createdAt: "desc" } });
+  if (latest && Date.now() - latest.createdAt.getTime() < OTP_RESEND_COOLDOWN_MS) return { ok: true, message: GENERIC_SENT };
+
+  const code = String(randomInt(0, 1_000_000)).padStart(6, "0");
+  await db.$transaction(async (tx) => {
+    await tx.passwordResetOtp.updateMany({ where: { userId: user.id, usedAt: null }, data: { usedAt: new Date() } }); // only the newest code works
+    const otp = await tx.passwordResetOtp.create({ data: { userId: user.id, codeHash: hashOtp(user.id, code), expiresAt: new Date(Date.now() + OTP_TTL_MS) } });
+    await enqueueEmails(tx, [{ tenantId: user.tenantId, to: user.email, kind: "PASSWORD_RESET", dedupeKey: `otp:${otp.id}`, ...resetOtp({ name: user.fullName, code, minutes: OTP_TTL_MS / 60_000 }) }]);
+  });
+  // Send now rather than waiting for the scheduled outbox job: a login code that arrives hours later is useless.
+  await flushOutbox(10).catch((e) => console.error("[otp] immediate send failed; will be retried by the outbox job", e));
+  return { ok: true, message: GENERIC_SENT };
+}
+
+/** Step 2. Verifies the code (limited attempts, single use, expiry) and only then changes the password. */
+export async function resetPasswordWithOtp(input: z.infer<typeof resetSchema>, ip?: string | null) {
+  const { email, code, password } = resetSchema.parse(input);
+  throttle(`reset|${ip ?? "?"}|${email}`, 10);
+
+  const db = sysDb();
+  const user = await db.user.findUnique({ where: { email }, include: { tenant: { select: { isSuspended: true } } } });
+  if (!user || user.status !== "ACTIVE" || user.tenant?.isSuspended || isEnvManagedOperator(email)) throw BAD_CODE;
+
+  const otp = await db.passwordResetOtp.findFirst({
+    where: { userId: user.id, usedAt: null, expiresAt: { gt: new Date() }, attempts: { lt: OTP_MAX_ATTEMPTS } },
+    orderBy: { createdAt: "desc" },
+  });
+  if (!otp) throw BAD_CODE;
+
+  // Count the attempt BEFORE comparing (atomically), so parallel guesses cannot exceed the limit.
+  const counted = await db.passwordResetOtp.updateMany({ where: { id: otp.id, usedAt: null, attempts: { lt: OTP_MAX_ATTEMPTS } }, data: { attempts: { increment: 1 } } });
+  if (counted.count === 0) throw BAD_CODE;
+
+  const a = Buffer.from(hashOtp(user.id, code));
+  const b = Buffer.from(otp.codeHash);
+  if (a.length !== b.length || !timingSafeEqual(a, b)) throw BAD_CODE;
+
+  const passwordHash = await hashPassword(password);
+  // Single use even under concurrent submissions.
+  const claimed = await db.passwordResetOtp.updateMany({ where: { id: otp.id, usedAt: null }, data: { usedAt: new Date() } });
+  if (claimed.count === 0) throw BAD_CODE;
+
+  await db.$transaction([
+    db.user.update({ where: { id: user.id }, data: { passwordHash } }),
+    db.passwordResetOtp.updateMany({ where: { userId: user.id, usedAt: null }, data: { usedAt: new Date() } }),
+    db.auditLog.create({ data: { tenantId: user.tenantId, userId: user.id, action: "PASSWORD_RESET", ipAddress: ip ?? null } }),
+  ]);
+  return { ok: true, message: "Password updated. You can sign in now.", redirect: "/login" };
 }

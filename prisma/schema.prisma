@@ -129,6 +129,7 @@ model User {
   auditLogs         AuditLog[]
   extensionRequests ExtensionRequest[] // [+]
   passwordTokens    PasswordToken[] // [+]
+  passwordOtps      PasswordResetOtp[] // [+]
 
   @@unique([tenantId, studentId])
   @@index([tenantId, role, status]) // [+]
@@ -147,6 +148,22 @@ model PasswordToken {
 
   @@index([userId])
   @@map("password_tokens")
+}
+
+// [+] One-time codes for "forgot password". Only a keyed hash of the 6-digit code is stored; each code expires
+// quickly, allows a few attempts, and can be used once. System-role only (no tenant policy).
+model PasswordResetOtp {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  codeHash  String
+  expiresAt DateTime
+  attempts  Int       @default(0)
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, createdAt])
+  @@map("password_reset_otps")
 }
 
 // ------------------------------------------------------

@@ -4,7 +4,7 @@ import { isUniqueViolation, sysDb } from "../db";
 import { AppError, conflict, notFound } from "../errors";
 import { audit } from "../audit";
 import { newToken, sha256, unusablePasswordHash } from "../auth/password";
-import { enqueueEmails } from "../mail/outbox";
+import { enqueueEmails, flushOutbox } from "../mail/outbox";
 import { invite } from "../mail/templates";
 import { TIER_PRESETS } from "./licensing";
 
@@ -23,7 +23,7 @@ export const provisionSchema = z.object({
 export async function provisionTenant(actorId: string, input: z.infer<typeof provisionSchema>) {
   const preset = TIER_PRESETS[input.tier];
   try {
-    return await sysDb().$transaction(async (tx) => {
+    const tenant = await sysDb().$transaction(async (tx) => {
       const tenant = await tx.tenant.create({
         data: { name: input.name, code: input.code, tier: input.tier, ...preset, allowedEmailDomains: input.allowedEmailDomains },
       });
@@ -38,6 +38,9 @@ export async function provisionTenant(actorId: string, input: z.infer<typeof pro
       await audit(tx, { tenantId: tenant.id, userId: actorId, action: "TENANT_PROVISIONED", details: { code: tenant.code, tier: tenant.tier } });
       return tenant;
     });
+    // Deliver the admin's invitation now rather than waiting for the scheduled outbox job.
+    await flushOutbox(10).catch((e) => console.error("[invite] immediate send failed; outbox job will retry", e));
+    return tenant;
   } catch (e) {
     if (isUniqueViolation(e, "code")) throw conflict("CODE_TAKEN", `School code "${input.code}" is already in use`);
     if (isUniqueViolation(e, "email")) throw conflict("EMAIL_TAKEN", "That admin email already has an account");

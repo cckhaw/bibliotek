@@ -29,3 +29,8 @@ export const shiftChanged = (p: { name: string; branch: string; start: Date; end
     ? `Hi ${p.name},\n\nYour shift at ${p.branch} on ${fmtTime(p.start)} has been cancelled.\n`
     : `Hi ${p.name},\n\nYour shift has changed. It is now:\n\n- ${p.branch}: ${fmtTime(p.start)} -> ${fmtTime(p.end)}\n`,
 });
+
+export const resetOtp = (p: { name: string; code: string; minutes: number }) => ({
+  subject: `${p.code} is your Bibliotek verification code`,
+  body: `Hi ${p.name},\n\nYour verification code to reset your password is:\n\n    ${p.code}\n\nIt expires in ${p.minutes} minutes and can be used once. If you did not ask to reset your password, you can ignore this email; your password has not changed.\n`,
+});
