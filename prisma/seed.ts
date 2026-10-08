@@ -10,10 +10,13 @@ const PASSWORD = process.env.SEED_PASSWORD ?? "ChangeMe-123456";
 async function main() {
   const hash = await bcrypt.hash(PASSWORD, 12);
 
+  // Honour the same variables as production; fall back to a demo account only for local development.
+  const saEmail = (process.env.SUPERADMIN_EMAIL || "superadmin@bibliotek.test").toLowerCase();
+  const saHash = process.env.SUPERADMIN_PASSWORD ? await bcrypt.hash(process.env.SUPERADMIN_PASSWORD, 12) : hash;
   await db.user.upsert({
-    where: { email: "superadmin@bibliotek.test" },
+    where: { email: saEmail },
     update: {},
-    create: { role: "SUPER_ADMIN", email: "superadmin@bibliotek.test", fullName: "Platform Operator", passwordHash: hash },
+    create: { role: "SUPER_ADMIN", email: saEmail, fullName: "Platform Operator", passwordHash: saHash },
   });
 
   const tenant = await db.tenant.upsert({
