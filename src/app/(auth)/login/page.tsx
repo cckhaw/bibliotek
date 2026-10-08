@@ -13,8 +13,8 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         { name: "email", label: "Email", type: "email", required: true },
         { name: "password", label: "Password", type: "password", required: true, autoComplete: "current-password" },
       ]} />
-      <p className="mt-3 text-sm"><Link className="text-brand-600 underline" href="/forgot-password">Forgot password?</Link></p>
-      <p className="muted mt-3">New student? <Link className="text-brand-600 underline" href="/register">Register here</Link></p>
+      <p className="mt-3 text-sm"><Link className="text-brand-link underline" href="/forgot-password">Forgot password?</Link></p>
+      <p className="muted mt-3">New student? <Link className="text-brand-link underline" href="/register">Register here</Link></p>
     </>
   );
 }

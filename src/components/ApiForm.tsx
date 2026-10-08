@@ -73,7 +73,7 @@ export function ApiForm({
             </label>
           ) : (
             <>
-              <label htmlFor={f.name} className="label">{f.label}{f.required && <span className="text-red-600"> *</span>}</label>
+              <label htmlFor={f.name} className="label">{f.label}{f.required && <span className="text-red-600 dark:text-red-400"> *</span>}</label>
               {f.type === "select" ? (
                 <select id={f.name} name={f.name} className="input" required={f.required} defaultValue={String(f.defaultValue ?? "")}>
                   {f.options?.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}

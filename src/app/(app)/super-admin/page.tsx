@@ -27,10 +27,10 @@ export default async function SuperAdminHome() {
           <thead><tr><th>Tenant</th><th>Plan</th><th>Students</th><th>Books</th><th>Checked out</th><th>Active (30d)</th><th>Storage</th><th /></tr></thead>
           <tbody>{tenants.map((t) => (
             <tr key={t.id}>
-              <td><Link className="font-medium text-brand-600 underline" href={`/super-admin/tenants/${t.id}`}>{t.name}</Link><p className="muted">{t.code}</p></td>
+              <td><Link className="font-medium text-brand-link underline" href={`/super-admin/tenants/${t.id}`}>{t.name}</Link><p className="muted">{t.code}</p></td>
               <td><Badge tone={t.tier === "ENTERPRISE" ? "amber" : "gray"}>{t.tier.toLowerCase()}</Badge> {t.isSuspended && <Badge tone="red">suspended</Badge>}</td>
-              <td className={pct(t.students, t.maxStudents) >= 90 ? "text-red-600" : ""}>{t.students} / {t.maxStudents}</td>
-              <td className={pct(t.books, t.maxBooks) >= 90 ? "text-red-600" : ""}>{t.books} / {t.maxBooks}</td>
+              <td className={pct(t.students, t.maxStudents) >= 90 ? "text-red-600 dark:text-red-400" : ""}>{t.students} / {t.maxStudents}</td>
+              <td className={pct(t.books, t.maxBooks) >= 90 ? "text-red-600 dark:text-red-400" : ""}>{t.books} / {t.maxBooks}</td>
               <td>{t.activeLoans}</td><td>{t.activeUsers30d ?? "—"}</td><td>{bytes(t.storageBytes)}</td>
               <td><Link className="btn-ghost btn-sm" href={`/super-admin/tenants/${t.id}`}>Manage</Link></td>
             </tr>))}</tbody>

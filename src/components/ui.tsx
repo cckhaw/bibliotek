@@ -20,7 +20,7 @@ export function Stat({ label, value, sub, tone }: { label: string; value: ReactN
   return (
     <div className="card">
       <p className="muted">{label}</p>
-      <p className={`mt-1 text-2xl font-semibold ${tone === "red" ? "text-red-600" : ""}`}>{value}</p>
+      <p className={`mt-1 text-2xl font-semibold ${tone === "red" ? "text-red-600 dark:text-red-400" : ""}`}>{value}</p>
       {sub && <p className="muted mt-0.5">{sub}</p>}
     </div>
   );
