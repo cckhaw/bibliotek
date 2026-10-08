@@ -147,12 +147,21 @@ Open `https://<your-site>/api/health`. It returns `ok` or, per check, a short **
 | | `DB_MISSING` | The database name in the URL doesn't exist. |
 | | `DB_BUSY` | Too many connections; use your host's pooled connection string. |
 | `schema` | `DB_SCHEMA` | Migrations haven't been applied. |
-| | `DB_PERMISSION` | `bibliotek_app` lacks grants. Run the repair SQL under "Two database roles". |
+| | `DB_PERMISSION` | The **system** login (`SYSTEM_DATABASE_URL`) can't read the tables, e.g. a role with `BYPASSRLS` that was never granted access. Use the table owner, or grant it access (see below). **Sign-in fails with this code.** |
+| `appTables` | `DB_PERMISSION` | The **restricted** login (`DATABASE_URL`, `bibliotek_app`) lacks grants. Run the repair SQL under "Two database roles". |
 | `systemRole` | `SYSTEM_RESTRICTED` | `SYSTEM_DATABASE_URL` is missing/blank or uses the restricted role. It must be the **owner** role, or nobody can sign in. |
 | `rls` | `RLS_EXEMPT` | `DATABASE_URL` uses an owner/superuser/`BYPASSRLS` role, so the app refuses to serve tenant data. Use `bibliotek_app`. |
 
 The same codes appear in sign-in errors ("The service is temporarily unavailable (DB_AUTH)…") and the details are in the Vercel runtime logs
 (`[infra:…]`, `[security]`, `[config]`).
+
+**If `schema` shows `DB_PERMISSION`** and you want to keep a non-owner role as `SYSTEM_DATABASE_URL`, grant it table access (as an admin), then redeploy.
+It also needs `BYPASSRLS`, or it will report `SYSTEM_RESTRICTED`. Using the role that owns the tables avoids both:
+```sql
+GRANT USAGE ON SCHEMA public TO <system_role>;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO <system_role>;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO <system_role>;
+```
 
 ## Super admin account
 

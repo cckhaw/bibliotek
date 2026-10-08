@@ -18,5 +18,6 @@ describe("SYSTEM_DATABASE_URL missing/blank (system connection is the restricted
     expect(h.env).toBe("ok");
     expect(h.systemRole).toBe("SYSTEM_RESTRICTED");
     expect(h.rls).toBe("ok"); // the runtime role itself is correct
+    expect(h.appTables).toBe("ok");
   });
 });
