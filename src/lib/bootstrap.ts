@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { sysDb } from "./db";
+import { assertSystemRole, sysDb } from "./db";
 import { hashPassword, verifyPassword } from "./auth/password";
 
 const schema = z.object({
@@ -24,6 +24,7 @@ export async function ensureSuperAdmin(source: NodeJS.ProcessEnv = process.env):
     SUPERADMIN_NAME: source.SUPERADMIN_NAME || undefined,
   });
 
+  await assertSystemRole();
   const db = sysDb();
   const existing = await db.user.findUnique({ where: { email: cfg.SUPERADMIN_EMAIL } });
 

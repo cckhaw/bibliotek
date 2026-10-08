@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { createHmac, randomInt, timingSafeEqual } from "node:crypto";
 import type { Role } from "@prisma/client";
-import { isUniqueViolation, sysDb, withTenant } from "../db";
+import { assertSystemRole, isUniqueViolation, sysDb, withTenant } from "../db";
 import { AppError, conflict, notFound } from "../errors";
 import { audit } from "../audit";
 import { dummyHash, hashPassword, newToken, sha256, verifyPassword } from "../auth/password";
@@ -26,6 +26,7 @@ function throttle(key: string, max = 8, windowMs = 15 * 60_000) {
 export async function login(input: { email: string; password: string; ip?: string | null }) {
   const email = input.email.trim().toLowerCase();
   throttle(`${input.ip ?? "?"}|${email}`);
+  await assertSystemRole();
   const user = await sysDb().user.findUnique({ where: { email }, include: { tenant: { select: { isSuspended: true } } } });
 
   // Always run a bcrypt compare so timing does not reveal whether the account exists.

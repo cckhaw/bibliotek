@@ -2,7 +2,7 @@ import "server-only";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import type { Role, StudentStatus } from "@prisma/client";
-import { sysDb } from "../db";
+import { assertSystemRole, sysDb } from "../db";
 import { AppError, forbidden } from "../errors";
 import { COOKIE, SESSION_TTL_S, signSession, verifySession } from "./token";
 import { HOME, assertCan, can, type Permission } from "./rbac";
@@ -35,6 +35,7 @@ export async function endSession() {
 async function loadUser(token: string | undefined): Promise<CurrentUser | null> {
   const claims = await verifySession(token);
   if (!claims) return null;
+  await assertSystemRole();
   const u = await sysDb().user.findUnique({
     where: { id: claims.sub },
     select: {
