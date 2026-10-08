@@ -66,5 +66,13 @@ This protects against a forgotten `where tenantId` or an injection in tenant-sco
 - **Return** at any branch of the tenant: sets `currentBranchId` only; `homeBranchId` untouched; `BRANCH_RETURN` audited; fine computed.
 - **Fine** = `max(0, ceil(daysLate) − grace) × daily rate`, integer cents, optional cap; recomputed from dates by the daily job (never incremented), so re-runs are no-ops; PAID/WAIVED fines are frozen.
 
-## 6. Hardening still to do before production
-Redis-backed login rate limiting (current throttle is per-instance); a "forgot password" request page (token redemption exists); email verification; per-tenant timezone for due dates/roster display (currently UTC); pagination on admin lists; connection-pool sizing (PgBouncer transaction mode works with `set_config(..., true)`).
+## 6. Added since the first version
+- Email via Resend with a transactional outbox; screens report real delivery results.
+- Forgot-password with an emailed one-time code (`password_reset_otps`, keyed hash, 10 min, 5 attempts, single use).
+- Environment-managed super admin (`SUPERADMIN_EMAIL` / `SUPERADMIN_PASSWORD`), applied at server start.
+- Super admin can edit a school admin's name/email, send setup links, and edit their own profile.
+
+## 7. Still to do before heavy production use
+Redis-backed rate limiting (current throttle is per-instance); per-tenant timezone for due dates and roster display;
+pagination on admin lists; connection-pool sizing (PgBouncer in transaction mode works with `set_config(..., true)`);
+feature gating and billing per plan; email verification for self-registration.
