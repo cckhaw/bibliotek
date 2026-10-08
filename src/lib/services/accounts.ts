@@ -115,6 +115,12 @@ export async function redeemToken(rawToken: string, password: string) {
 
 /** Staff-created accounts (admin/librarian) get an invite rather than a password chosen by someone else. */
 export async function createStaffAccount(tenantId: string, tenantName: string, actorId: string, input: { email: string; fullName: string; role: "LIBRARIAN" | "TENANT_ADMIN" }) {
+  const user = await createStaffAccountTx(tenantId, tenantName, actorId, input);
+  await flushOutbox(10).catch((e) => console.error("[invite] immediate send failed; outbox job will retry", e));
+  return user;
+}
+
+async function createStaffAccountTx(tenantId: string, tenantName: string, actorId: string, input: { email: string; fullName: string; role: "LIBRARIAN" | "TENANT_ADMIN" }) {
   return withTenant(tenantId, async (tx) => {
     try {
       const user = await tx.user.create({

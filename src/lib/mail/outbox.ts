@@ -2,6 +2,7 @@ import nodemailer, { type Transporter } from "nodemailer";
 import type { Tx } from "../db";
 import { sysDb } from "../db";
 import { env } from "../env";
+import { sendViaResend } from "./resend";
 
 export interface OutgoingEmail {
   tenantId: string | null;
@@ -29,8 +30,18 @@ const SENSITIVE_KINDS = new Set(["INVITE", "PASSWORD_RESET"]);
 let transport: Transporter | undefined;
 function getTransport() {
   const url = env().SMTP_URL;
-  // Without SMTP configured, emails are rendered and logged (development / CI).
   return (transport ??= url ? nodemailer.createTransport(url) : nodemailer.createTransport({ jsonTransport: true }));
+}
+
+/** Provider order: Resend (RESEND_API_KEY) -> SMTP (SMTP_URL) -> console log (development / CI). */
+async function deliver(m: { id: string; toEmail: string; subject: string; body: string }) {
+  const { RESEND_API_KEY, SMTP_URL, MAIL_FROM } = env();
+  if (RESEND_API_KEY) {
+    await sendViaResend({ apiKey: RESEND_API_KEY, from: MAIL_FROM, to: m.toEmail, subject: m.subject, text: m.body, idempotencyKey: `bibliotek-${m.id}` });
+    return;
+  }
+  await getTransport().sendMail({ from: MAIL_FROM, to: m.toEmail, subject: m.subject, text: m.body });
+  if (!SMTP_URL) console.log(`[mail:dev] to=${m.toEmail} subject="${m.subject}"\n${m.body}\n`);
 }
 
 interface Claimed {
@@ -57,9 +68,7 @@ export async function flushOutbox(limit = 100): Promise<{ sent: number; failed: 
   let failed = 0;
   for (const m of rows) {
     try {
-      const info = await getTransport().sendMail({ from: env().MAIL_FROM, to: m.toEmail, subject: m.subject, text: m.body });
-      if (!env().SMTP_URL) console.log(`[mail:dev] to=${m.toEmail} subject="${m.subject}"\n${m.body}\n`);
-      void info;
+      await deliver(m);
       await db.emailOutbox.update({
         where: { id: m.id },
         // Invite/reset bodies contain a live token: scrub once delivered.
