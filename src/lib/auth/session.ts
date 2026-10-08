@@ -32,12 +32,8 @@ export async function endSession() {
   (await cookies()).delete(COOKIE);
 }
 
-/**
- * Verifies the JWT AND reloads the user, so suspending a user/tenant or changing a role takes effect
- * on the very next request instead of when the token expires.
- */
-export async function getCurrentUser(): Promise<CurrentUser | null> {
-  const claims = await verifySession((await cookies()).get(COOKIE)?.value);
+async function loadUser(token: string | undefined): Promise<CurrentUser | null> {
+  const claims = await verifySession(token);
   if (!claims) return null;
   const u = await sysDb().user.findUnique({
     where: { id: claims.sub },
@@ -50,6 +46,29 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
   if (u.tenant?.isSuspended) return null;
   if (u.role !== claims.role || u.tenantId !== claims.tenantId) return null; // stale token after role change
   return { id: u.id, email: u.email, fullName: u.fullName, role: u.role, tenantId: u.tenantId, status: u.status, tenantName: u.tenant?.name ?? null };
+}
+
+/**
+ * Verifies the JWT AND reloads the user, so suspending a user/tenant or changing a role takes effect
+ * on the very next request instead of when the token expires.
+ */
+export async function getCurrentUser(): Promise<CurrentUser | null> {
+  return loadUser((await cookies()).get(COOKIE)?.value);
+}
+
+/**
+ * Like getCurrentUser, but a backend failure (database down, bad setting) is logged and treated as "signed out".
+ * For public pages that must stay up. The cookie is read OUTSIDE the try: cookies() signals "this route is dynamic"
+ * to Next by throwing, and swallowing that would break rendering.
+ */
+export async function getCurrentUserOrNull(): Promise<CurrentUser | null> {
+  const token = (await cookies()).get(COOKIE)?.value;
+  try {
+    return await loadUser(token);
+  } catch (e) {
+    console.error("[session] could not resolve the current user; treating the visitor as signed out:", e instanceof Error ? e.message : e);
+    return null;
+  }
 }
 
 /** For server components / actions: redirects to login instead of throwing. */

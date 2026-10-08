@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getCurrentUser } from "@/lib/auth/session";
+import { getCurrentUserOrNull } from "@/lib/auth/session";
 import { HOME } from "@/lib/auth/rbac";
 import { TIER_PRESETS } from "@/lib/services/licensing";
 import { Check, Feature, Panel, SiteFooter, SiteHeader } from "@/components/marketing";
@@ -24,7 +24,8 @@ const PLANS = [
 ] as const;
 
 export default async function Landing() {
-  const user = await getCurrentUser();
+  // The public home page must stay up even if the database or a setting is broken: fall back to the signed-out page.
+  const user = await getCurrentUserOrNull();
   if (user) redirect(HOME[user.role]);
 
   return (

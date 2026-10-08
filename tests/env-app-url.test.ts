@@ -27,4 +27,33 @@ describe("APP_URL used in emailed links", () => {
   it("only uses localhost for local development", async () => {
     expect(await appUrl({})).toBe("http://localhost:3000");
   });
+
+  it("adds https:// when the scheme was forgotten (the usual dashboard typo), http:// for localhost", async () => {
+    expect(await appUrl({ APP_URL: "bibliotek.khaw.cc" })).toBe("https://bibliotek.khaw.cc");
+    expect(await appUrl({ APP_URL: "  bibliotek.khaw.cc/  " })).toBe("https://bibliotek.khaw.cc");
+    expect(await appUrl({ APP_URL: "localhost:3000" })).toBe("http://localhost:3000");
+  });
+  it("treats a blank value as not set", async () => {
+    expect(await appUrl({ APP_URL: "   " })).toBe("http://localhost:3000");
+  });
+});
+
+describe("invalid environment", () => {
+  it("throws a readable error naming the variable but never its value", async () => {
+    vi.resetModules();
+    for (const [k, v] of Object.entries({ DATABASE_URL: "x", AUTH_SECRET: "short-secret-value", CRON_SECRET: "12345678" })) vi.stubEnv(k, v);
+    const { env } = await import("@/lib/env");
+    let msg = "";
+    try { env(); } catch (e) { msg = (e as Error).message; }
+    expect(msg).toContain("Invalid environment configuration");
+    expect(msg).toContain("AUTH_SECRET");
+    expect(msg).not.toContain("short-secret-value");
+  });
+  it("a blank MAIL_FROM falls back to the default sender", async () => {
+    vi.resetModules();
+    for (const [k, v] of Object.entries({ ...base, MAIL_FROM: "  ", RESEND_API_KEY: "" })) vi.stubEnv(k, v);
+    const { env } = await import("@/lib/env");
+    expect(env().MAIL_FROM).toBe("Bibliotek <noreply@khaw.cc>");
+    expect(env().RESEND_API_KEY).toBeUndefined();
+  });
 });
