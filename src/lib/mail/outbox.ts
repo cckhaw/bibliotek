@@ -40,6 +40,10 @@ async function deliver(m: { id: string; toEmail: string; subject: string; body: 
     await sendViaResend({ apiKey: RESEND_API_KEY, from: MAIL_FROM, to: m.toEmail, subject: m.subject, text: m.body, idempotencyKey: `bibliotek-${m.id}` });
     return;
   }
+  if (!SMTP_URL && process.env.NODE_ENV === "production") {
+    // Previously this "sent" to the console and marked the row SENT, so nothing arrived and nobody was told.
+    throw new Error("Email is not configured: set RESEND_API_KEY and MAIL_FROM (a domain verified in Resend) in the environment, then redeploy");
+  }
   await getTransport().sendMail({ from: MAIL_FROM, to: m.toEmail, subject: m.subject, text: m.body });
   if (!SMTP_URL) console.log(`[mail:dev] to=${m.toEmail} subject="${m.subject}"\n${m.body}\n`);
 }
@@ -77,16 +81,28 @@ export async function flushOutbox(limit = 100): Promise<{ sent: number; failed: 
       sent++;
     } catch (e) {
       failed++;
+      console.error(`[mail] ${m.kind} to ${m.toEmail} failed (attempt ${m.attempts}): ${e instanceof Error ? e.message : e}`);
       const exhausted = m.attempts >= MAX_ATTEMPTS;
       await db.emailOutbox.update({
         where: { id: m.id },
         data: {
           status: exhausted ? "FAILED" : "PENDING",
-          lastError: String(e).slice(0, 500),
+          lastError: (e instanceof Error ? e.message : String(e)).slice(0, 500),
           scheduledAt: new Date(Date.now() + 2 ** m.attempts * 60_000), // exponential backoff
         },
       });
     }
   }
   return { sent, failed };
+}
+
+/**
+ * Send a just-queued email right away and report the real outcome, so screens can say "sent" or show why not.
+ * On failure the row stays PENDING and the scheduled outbox job keeps retrying with backoff.
+ */
+export async function deliverNow(dedupeKey: string): Promise<{ sent: boolean; error?: string }> {
+  await flushOutbox(25).catch((e) => console.error("[mail] flush failed", e));
+  const row = await sysDb().emailOutbox.findUnique({ where: { dedupeKey }, select: { status: true, lastError: true } });
+  if (row?.status === "SENT") return { sent: true };
+  return { sent: false, error: row?.lastError ?? "Delivery has not been attempted yet" };
 }

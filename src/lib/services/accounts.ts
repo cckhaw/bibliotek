@@ -5,7 +5,7 @@ import { isUniqueViolation, sysDb, withTenant } from "../db";
 import { AppError, conflict, notFound } from "../errors";
 import { audit } from "../audit";
 import { dummyHash, hashPassword, newToken, sha256, verifyPassword } from "../auth/password";
-import { enqueueEmails, flushOutbox } from "../mail/outbox";
+import { deliverNow, enqueueEmails, flushOutbox } from "../mail/outbox";
 import { invite, resetOtp } from "../mail/templates";
 import { env } from "../env";
 import { assertCapacity } from "./licensing";
@@ -115,8 +115,9 @@ export async function redeemToken(rawToken: string, password: string) {
 
 /** Staff-created accounts (admin/librarian) get an invite rather than a password chosen by someone else. */
 export async function createStaffAccount(tenantId: string, tenantName: string, actorId: string, input: { email: string; fullName: string; role: "LIBRARIAN" | "TENANT_ADMIN" }) {
-  const user = await createStaffAccountTx(tenantId, tenantName, actorId, input);
-  await flushOutbox(10).catch((e) => console.error("[invite] immediate send failed; outbox job will retry", e));
+  const { user, dedupeKey } = await createStaffAccountTx(tenantId, tenantName, actorId, input);
+  const r = await deliverNow(dedupeKey);
+  if (!r.sent) throw new AppError("EMAIL_NOT_SENT", `The account for ${user.email} was created but the invitation email could not be sent: ${r.error}. Use "Send password setup link" once email is fixed.`, 502);
   return user;
 }
 
@@ -128,9 +129,10 @@ async function createStaffAccountTx(tenantId: string, tenantName: string, actorI
       });
       const raw = newToken();
       await tx.passwordToken.create({ data: { userId: user.id, tokenHash: sha256(raw), expiresAt: new Date(Date.now() + 7 * 86_400_000) } });
-      await enqueueEmails(tx, [{ tenantId, to: user.email, kind: "INVITE", dedupeKey: `invite:${user.id}:${sha256(raw).slice(0, 12)}`, ...invite({ name: user.fullName, school: tenantName, token: raw }) }]);
+      const dedupeKey = `invite:${user.id}:${sha256(raw).slice(0, 12)}`;
+      await enqueueEmails(tx, [{ tenantId, to: user.email, kind: "INVITE", dedupeKey, ...invite({ name: user.fullName, school: tenantName, token: raw }) }]);
       await audit(tx, { tenantId, userId: actorId, action: "STAFF_CREATED", details: { userId: user.id, role: input.role } });
-      return user;
+      return { user, dedupeKey };
     } catch (e) {
       if (isUniqueViolation(e)) throw conflict("EMAIL_TAKEN", "An account with this email already exists");
       throw e;

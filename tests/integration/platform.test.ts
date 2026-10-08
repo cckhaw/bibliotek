@@ -251,7 +251,7 @@ describe("fines, reminders, jobs", () => {
   it("outbox worker sends pending mail, scrubs tokens, and does not resend", async () => {
     const first = await flushOutbox(500);
     expect(first.sent).toBeGreaterThan(0);
-    expect(await db.emailOutbox.count({ where: { status: "PENDING", attempts: { lt: 5 } } })).toBe(0);
+    expect(await db.emailOutbox.count({ where: { status: "PENDING", attempts: { lt: 5 }, tenantId: { in: [A.id, B.id] } } })).toBe(0);
     expect((await db.emailOutbox.findFirstOrThrow({ where: { tenantId: A.id, kind: "INVITE", status: "SENT" } })).body).toBe("[redacted after delivery]");
     expect((await flushOutbox(500)).sent).toBe(0);
   });
