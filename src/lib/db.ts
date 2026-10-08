@@ -1,7 +1,7 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { env } from "./env";
 import { runWithTenant, tenantScopeExtension } from "./tenant-scope";
-import { RLS_FIX, checkRlsEnforced } from "./rls-guard";
+import { RLS_FIX, checkRlsCode, checkRlsEnforced } from "./rls-guard";
 import { AppError } from "./errors";
 import { classifyInfraError, infraMessage } from "./infra-errors";
 
@@ -113,8 +113,7 @@ export async function healthCheck() {
       await appDb().$queryRaw`SELECT 1 FROM branches LIMIT 1`;
     });
     try {
-      const problem = await checkRlsEnforced(appDb());
-      checks.rls = problem ? "RLS_EXEMPT" : "ok";
+      checks.rls = (await checkRlsCode(appDb())) ?? "ok"; // RLS_BYPASSRLS | RLS_OWNER | RLS_SUPERUSER | RLS_DISABLED
     } catch (e) { checks.rls = classifyInfraError(e) ?? "ERROR"; }
   }
   return checks;

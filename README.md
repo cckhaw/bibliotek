@@ -150,7 +150,10 @@ Open `https://<your-site>/api/health`. It returns `ok` or, per check, a short **
 | | `DB_PERMISSION` | The **system** login (`SYSTEM_DATABASE_URL`) can't read the tables, e.g. a role with `BYPASSRLS` that was never granted access. Use the table owner, or grant it access (see below). **Sign-in fails with this code.** |
 | `appTables` | `DB_PERMISSION` | The **restricted** login (`DATABASE_URL`, `bibliotek_app`) lacks grants. Run the repair SQL under "Two database roles". |
 | `systemRole` | `SYSTEM_RESTRICTED` | `SYSTEM_DATABASE_URL` is missing/blank or uses the restricted role. It must be the **owner** role, or nobody can sign in. |
-| `rls` | `RLS_EXEMPT` | `DATABASE_URL` uses an owner/superuser/`BYPASSRLS` role, so the app refuses to serve tenant data. Use `bibliotek_app`. |
+| `rls` | `RLS_BYPASSRLS` | The `DATABASE_URL` role has the `BYPASSRLS` attribute (Neon gives this to roles created in its dashboard). The app refuses to serve tenant data. Fix: `ALTER ROLE <role> NOBYPASSRLS;`, or create the role with SQL. |
+| | `RLS_OWNER` | The `DATABASE_URL` role owns the tables, or is a **member of the role that does**. Use a separate, non-owner role; check with `SELECT r.rolname FROM pg_auth_members m JOIN pg_roles r ON r.oid = m.roleid JOIN pg_roles u ON u.oid = m.member WHERE u.rolname = '<role>';` |
+| | `RLS_SUPERUSER` | The `DATABASE_URL` role is a superuser. Use a plain role. |
+| | `RLS_DISABLED` | RLS is not enabled on the tables: run the second migration. |
 
 The same codes appear in sign-in errors ("The service is temporarily unavailable (DB_AUTH)…") and the details are in the Vercel runtime logs
 (`[infra:…]`, `[security]`, `[config]`).
