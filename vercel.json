@@ -1,0 +1,8 @@
+{
+  "crons": [
+    { "path": "/api/jobs/fines", "schedule": "30 0 * * *" },
+    { "path": "/api/jobs/telemetry", "schedule": "0 1 * * *" },
+    { "path": "/api/jobs/reminders", "schedule": "0 6 * * *" },
+    { "path": "/api/jobs/outbox", "schedule": "15 6 * * *" }
+  ]
+}

@@ -1,0 +1,442 @@
+// Source of truth for the Bibliotek database.
+//
+// Based on the provided specification schema. Every original model/field is kept.
+// Changes are marked:  [+] additive    [Δ] modified (see docs/ARCHITECTURE.md §2 for rationale)
+// Raw-SQL-only objects (RLS policies, partial unique index, exclusion constraint,
+// trigram indexes) live in prisma/migrations/*_tenant_rls_and_constraints.
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ------------------------------------------------------
+// 1. TENANCIES, BRANCHES & LICENSING
+// ------------------------------------------------------
+
+enum SubscriptionTier {
+  FREE
+  STANDARD
+  ENTERPRISE
+}
+
+// [+] Which limits a tenant's license enforces: students only, books only, or both.
+enum LicenseMode {
+  STUDENTS
+  BOOKS
+  BOTH
+}
+
+model Tenant {
+  id          String           @id @default(uuid())
+  name        String
+  code        String           @unique // e.g., "monash-my", "oxford-main"
+  domain      String?          @unique // Custom domain or subdomain constraint
+  tier        SubscriptionTier @default(STANDARD)
+  maxStudents Int              @default(500)
+  maxBooks    Int              @default(2000)
+  isSuspended Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  // [+] Licensing & onboarding configuration
+  licenseMode         LicenseMode @default(BOTH)
+  allowedEmailDomains String[]    @default([]) // self-registration domain rules, e.g. ["students.monash.edu"]
+  autoApproveStudents Boolean     @default(false) // domain-matched registrations skip the approval queue
+  reminderLeadDays    Int         @default(2) // "due soon" email lead time
+
+  branches           Branch[]
+  users              User[]
+  catalogItems       CatalogItem[]
+  bookCopies         BookCopy[]
+  borrowPolicies     BorrowPolicy[]
+  loans              Loan[]
+  fines              Fine[]
+  dutyShifts         DutyShift[]
+  auditLogs          AuditLog[]
+  extensionRequests  ExtensionRequest[] // [+]
+  usageSnapshots     UsageSnapshot[] // [+]
+  emailOutbox        EmailOutbox[] // [+]
+
+  @@map("tenants")
+}
+
+model Branch {
+  id        String   @id @default(uuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name      String // e.g., "Main Library", "Engineering Branch"
+  code      String
+  address   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Home inventory vs Current inventory
+  homeCopies    BookCopy[] @relation("HomeBranch")
+  currentCopies BookCopy[] @relation("CurrentBranch")
+
+  checkoutLoans Loan[]      @relation("CheckoutBranch")
+  returnedLoans Loan[]      @relation("ReturnedBranch")
+  dutyShifts    DutyShift[]
+
+  @@unique([tenantId, code])
+  @@map("branches")
+}
+
+// ------------------------------------------------------
+// 2. USERS, ROLES & AUTHENTICATION
+// ------------------------------------------------------
+
+enum Role {
+  SUPER_ADMIN // Platform operator
+  TENANT_ADMIN // School Admin
+  LIBRARIAN // Staff
+  STUDENT // Borrower
+}
+
+enum StudentStatus {
+  PENDING_VERIFICATION
+  ACTIVE
+  SUSPENDED
+  GRADUATED
+}
+
+model User {
+  id           String        @id @default(uuid())
+  tenantId     String? // Nullable for SUPER_ADMIN
+  tenant       Tenant?       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  role         Role          @default(STUDENT)
+  email        String        @unique
+  passwordHash String
+  fullName     String
+  studentId    String? // Verification ID issued by school
+  status       StudentStatus @default(ACTIVE)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  // [+] Student profile used for policy matching and CSV import
+  studentType String? // e.g. "UNDERGRAD", "POSTGRAD", "STAFF" -> BorrowPolicy.studentType
+  department  String? // grade / department
+  phone       String?
+
+  loans             Loan[]
+  fines             Fine[]
+  dutyShifts        DutyShift[]
+  auditLogs         AuditLog[]
+  extensionRequests ExtensionRequest[] // [+]
+  passwordTokens    PasswordToken[] // [+]
+
+  @@unique([tenantId, studentId])
+  @@index([tenantId, role, status]) // [+]
+  @@map("users")
+}
+
+// [+] Single-use tokens for invite (bulk-imported students / new staff) and password reset.
+model PasswordToken {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique // sha256 of the emailed token; the raw token is never stored
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@map("password_tokens")
+}
+
+// ------------------------------------------------------
+// 3. CATALOG & CROSS-BRANCH INVENTORY TRACKING
+// ------------------------------------------------------
+
+model CatalogItem {
+  id          String   @id @default(uuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  isbn        String?
+  title       String
+  author      String
+  category    String
+  publisher   String?
+  deweyCode   String?
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // [+] Classification & discovery
+  genre   String?
+  subject String?
+  lcCode  String? // Library of Congress classification
+  tags    String[] @default([])
+
+  copies BookCopy[]
+
+  @@unique([tenantId, isbn]) // [+] NULL isbn allowed many times; enables ISBN upsert on CSV import
+  @@index([tenantId, category]) // [+]
+  @@index([tenantId, title]) // [+]
+  @@map("catalog_items")
+}
+
+enum CopyCondition {
+  NEW
+  GOOD
+  DAMAGED
+  LOST
+}
+
+enum CopyStatus {
+  AVAILABLE
+  CHECKED_OUT
+  IN_TRANSIT
+  RESERVED
+  MAINTENANCE
+}
+
+model BookCopy {
+  id            String      @id @default(uuid())
+  tenantId      String
+  tenant        Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  catalogItemId String
+  catalogItem   CatalogItem @relation(fields: [catalogItemId], references: [id], onDelete: Cascade)
+  barcode       String // [Δ] was globally @unique; now unique per tenant (see @@unique below)
+
+  // Cross-Branch Location Logic
+  homeBranchId    String
+  homeBranch      Branch @relation("HomeBranch", fields: [homeBranchId], references: [id])
+  currentBranchId String
+  currentBranch   Branch @relation("CurrentBranch", fields: [currentBranchId], references: [id])
+
+  condition CopyCondition @default(GOOD)
+  status    CopyStatus    @default(AVAILABLE)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  loans Loan[]
+
+  @@unique([tenantId, barcode]) // [Δ]
+  @@index([tenantId, status]) // [+]
+  @@index([catalogItemId]) // [+]
+  @@index([currentBranchId]) // [+]
+  @@map("book_copies")
+}
+
+// ------------------------------------------------------
+// 4. CIRCULATION, RULES & FINES
+// ------------------------------------------------------
+
+model BorrowPolicy {
+  id              String   @id @default(uuid())
+  tenantId        String
+  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name            String // e.g., "Standard Student Policy"
+  freeRentalDays  Int      @default(14)
+  dailyFineAmount Decimal  @default(0.50) @db.Decimal(10, 2)
+  maxLoansPerUser Int      @default(5)
+  gracePeriodDays Int      @default(1)
+  isDefault       Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // [+] Rules the brief requires but the original model could not express
+  studentType        String? // NULL = applies to any student type without a more specific policy
+  maxRenewals        Int      @default(1)
+  renewalDays        Int      @default(7)
+  fineBlockThreshold Decimal  @default(10.00) @db.Decimal(10, 2) // unpaid fines >= this block new checkouts
+  maxFinePerLoan     Decimal? @db.Decimal(10, 2) // optional cap
+
+  @@index([tenantId, studentType]) // [+]
+  @@map("borrow_policies")
+}
+
+enum LoanStatus {
+  ACTIVE
+  RETURNED
+  OVERDUE
+  LOST
+}
+
+model Loan {
+  id         String   @id @default(uuid())
+  tenantId   String
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  bookCopyId String
+  bookCopy   BookCopy @relation(fields: [bookCopyId], references: [id])
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+
+  // Origin & Return Tracking
+  checkoutBranchId String
+  checkoutBranch   Branch  @relation("CheckoutBranch", fields: [checkoutBranchId], references: [id])
+  returnedBranchId String?
+  returnedBranch   Branch? @relation("ReturnedBranch", fields: [returnedBranchId], references: [id])
+
+  borrowedAt     DateTime   @default(now())
+  dueDate        DateTime
+  returnedAt     DateTime?
+  status         LoanStatus @default(ACTIVE)
+  reminderSentAt DateTime?
+
+  renewalCount Int @default(0) // [+]
+
+  fines             Fine[]
+  extensionRequests ExtensionRequest[] // [+]
+
+  @@index([tenantId, status, dueDate]) // [+] reminder + overdue sweeps
+  @@index([userId, status]) // [+]
+  @@index([bookCopyId]) // [+]
+  @@map("loans")
+}
+
+// [+] Extension (renewal) requests with a librarian decision trail.
+enum ExtensionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model ExtensionRequest {
+  id        String          @id @default(uuid())
+  tenantId  String
+  tenant    Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  loanId    String
+  loan      Loan            @relation(fields: [loanId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User            @relation(fields: [userId], references: [id])
+  reason    String?
+  status    ExtensionStatus @default(PENDING)
+  decidedBy String?
+  decidedAt DateTime?
+  createdAt DateTime        @default(now())
+
+  @@index([tenantId, status])
+  @@index([loanId])
+  @@map("extension_requests")
+}
+
+enum FineStatus {
+  UNPAID
+  PAID
+  WAIVED
+}
+
+model Fine {
+  id        String     @id @default(uuid())
+  tenantId  String
+  tenant    Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  loanId    String
+  loan      Loan       @relation(fields: [loanId], references: [id])
+  userId    String
+  user      User       @relation(fields: [userId], references: [id])
+  amount    Decimal    @db.Decimal(10, 2)
+  status    FineStatus @default(UNPAID)
+  createdAt DateTime   @default(now())
+  paidAt    DateTime?
+
+  // [+] Accrual + waiver trail
+  daysOverdue Int       @default(0)
+  updatedAt   DateTime  @updatedAt
+  waivedBy    String?
+  waivedAt    DateTime?
+  waiveReason String?
+
+  @@unique([loanId]) // [+] one accruing fine per loan -> the daily job is idempotent
+  @@index([tenantId, userId, status]) // [+]
+  @@map("fines")
+}
+
+// ------------------------------------------------------
+// 5. LIBRARIAN DUTY ROSTERING
+// ------------------------------------------------------
+
+model DutyShift {
+  id          String    @id @default(uuid())
+  tenantId    String
+  tenant      Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branchId    String
+  branch      Branch    @relation(fields: [branchId], references: [id])
+  librarianId String
+  librarian   User      @relation(fields: [librarianId], references: [id])
+  startTime   DateTime
+  endTime     DateTime
+  notes       String?
+  notifiedAt  DateTime?
+  createdAt   DateTime  @default(now())
+
+  // [+] Draft -> published workflow, and change detection for "modified" emails
+  publishedAt DateTime?
+  updatedAt   DateTime  @updatedAt
+
+  @@index([tenantId, startTime]) // [+]
+  @@index([librarianId, startTime]) // [+]
+  @@map("duty_shifts")
+}
+
+// ------------------------------------------------------
+// 6. SYSTEM AUDIT & USAGE TELEMETRY
+// ------------------------------------------------------
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  tenantId  String?
+  tenant    Tenant?  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String // e.g., "BOOK_IMPORTED", "FINE_WAIVED", "BRANCH_RETURN"
+  details   Json?
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  @@index([tenantId, createdAt]) // [+]
+  @@index([action]) // [+]
+  @@map("audit_logs")
+}
+
+// [+] One row per tenant per day, written by the telemetry job. Powers the super-admin dashboard.
+model UsageSnapshot {
+  id           String   @id @default(uuid())
+  tenantId     String
+  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  day          DateTime @db.Date
+  students     Int
+  activeUsers  Int // distinct borrowers with loan activity in the last 30 days
+  bookCopies   Int
+  activeLoans  Int
+  openFines    Decimal  @db.Decimal(12, 2)
+  storageBytes BigInt // approximate on-disk footprint of the tenant's rows
+  createdAt    DateTime @default(now())
+
+  @@unique([tenantId, day])
+  @@map("usage_snapshots")
+}
+
+// [+] Transactional outbox for email. Rows are inserted in the same transaction as the business
+// change; a worker sends them. `dedupeKey` makes reminder jobs safe to re-run.
+enum EmailStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+model EmailOutbox {
+  id          String      @id @default(uuid())
+  tenantId    String?
+  tenant      Tenant?     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  toEmail     String
+  subject     String
+  body        String
+  kind        String // DUE_SOON | OVERDUE | SHIFT_PUBLISHED | SHIFT_MODIFIED | INVITE | PASSWORD_RESET
+  dedupeKey   String      @unique
+  status      EmailStatus @default(PENDING)
+  attempts    Int         @default(0)
+  lastError   String?
+  scheduledAt DateTime    @default(now())
+  sentAt      DateTime?
+  createdAt   DateTime    @default(now())
+
+  @@index([status, scheduledAt])
+  @@map("email_outbox")
+}

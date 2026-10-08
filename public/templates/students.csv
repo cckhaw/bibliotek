@@ -1,0 +1,3 @@
+student_id,email,full_name,department,phone,student_type
+S1001,ann.lee@students.example.edu,Ann Lee,Year 7,+60123456789,UNDERGRAD
+S1002,bob.tan@students.example.edu,Bob Tan,Year 8,,
