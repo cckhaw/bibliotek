@@ -20,6 +20,13 @@ the app creates that platform operator or updates its password, so rotating it i
 It will never modify an account that belongs to a school. If you previously loaded the demo SQL/seed, delete the demo
 `superadmin@bibliotek.test` user, because its password is public.
 
+## Forgot password & email delivery
+"Forgot password?" on the login page emails a 6-digit code (valid 10 minutes, 5 attempts, single use, one per minute).
+**Real emails require `SMTP_URL`** (e.g. `smtps://user:pass@smtp.example.com:465`) and `MAIL_FROM`. Without `SMTP_URL`
+the message is only written to the server log, so on a hosted deployment nobody receives the code. The environment-managed
+super admin (`SUPERADMIN_EMAIL`) is reset through `SUPERADMIN_PASSWORD`, not by OTP.
+After pulling this change run the new migration `prisma/migrations/20261009000000_password_reset_otp/migration.sql`.
+
 ## Tests
 ```bash
 npm test            # unit: fine maths, ISBN, CSV parsing

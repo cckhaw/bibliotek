@@ -1,6 +1,7 @@
 "use client";
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { PasswordInput } from "./PasswordInput";
 
 export interface Field {
   name: string;
@@ -14,6 +15,8 @@ export interface Field {
   min?: number;
   hint?: string;
   half?: boolean;
+  autoComplete?: string;
+  disabled?: boolean;
 }
 
 /** Submit JSON to an API route, surface the standard { error: { message } } contract, then refresh server data. */
@@ -77,10 +80,12 @@ export function ApiForm({
                 </select>
               ) : f.type === "textarea" ? (
                 <textarea id={f.name} name={f.name} rows={3} className="input" required={f.required} placeholder={f.placeholder} defaultValue={String(f.defaultValue ?? "")} />
+              ) : f.type === "password" ? (
+                <PasswordInput id={f.name} name={f.name} required={f.required} placeholder={f.placeholder} autoComplete={f.autoComplete ?? "new-password"} />
               ) : (
                 <input id={f.name} name={f.name} type={f.type ?? "text"} className="input" required={f.required} placeholder={f.placeholder}
-                  defaultValue={f.defaultValue === undefined ? undefined : String(f.defaultValue)} step={f.step} min={f.min}
-                  autoComplete={f.type === "password" ? "new-password" : f.type === "email" ? "email" : "off"} />
+                  defaultValue={f.defaultValue === undefined ? undefined : String(f.defaultValue)} step={f.step} min={f.min} disabled={f.disabled}
+                  autoComplete={f.autoComplete ?? (f.type === "email" ? "email" : "off")} />
               )}
               {f.hint && <p className="muted mt-1">{f.hint}</p>}
             </>

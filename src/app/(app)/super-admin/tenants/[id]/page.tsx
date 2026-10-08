@@ -14,13 +14,14 @@ export default async function TenantPage({ params }: { params: Promise<{ id: str
   const db = sysDb();
   const tenant = await db.tenant.findUnique({ where: { id } });
   if (!tenant) notFound();
-  const [students, books, loans, branches, snaps, audit] = await Promise.all([
+  const [students, books, loans, branches, snaps, audit, admins] = await Promise.all([
     db.user.count({ where: { tenantId: id, role: "STUDENT", status: { not: "GRADUATED" } } }),
     db.bookCopy.count({ where: { tenantId: id, condition: { not: "LOST" } } }),
     db.loan.count({ where: { tenantId: id, returnedAt: null } }),
     db.branch.count({ where: { tenantId: id } }),
     db.usageSnapshot.findMany({ where: { tenantId: id }, orderBy: { day: "desc" }, take: 14 }),
     db.auditLog.findMany({ where: { tenantId: id }, orderBy: { createdAt: "desc" }, take: 10 }),
+    db.user.findMany({ where: { tenantId: id, role: "TENANT_ADMIN" }, orderBy: { createdAt: "asc" } }),
   ]);
   const latest = snaps[0];
   return (
@@ -52,6 +53,21 @@ export default async function TenantPage({ params }: { params: Promise<{ id: str
           { name: "applyTierPreset", label: "Reset limits to the selected plan's defaults (ignores the numbers above)", type: "checkbox" },
         ]} />
         <p className="muted mt-2">Lowering a limit below current usage does not remove data; it blocks further additions until usage drops.</p>
+      </section>
+      <section className="card space-y-5">
+        <div><h2 className="h2 !mb-1">School admins</h2><p className="muted">Fix a mistyped name or email, then send a setup link so they can choose a password. Changes are recorded in the audit trail.</p></div>
+        {admins.length === 0 ? <p className="muted">This school has no admin account.</p> : admins.map((a) => (
+          <div key={a.id} className="rounded-xl border border-slate-200 p-4 dark:border-slate-800">
+            <ApiForm action={`/api/super-admin/users/${a.id}`} method="PATCH" reset={false} submit="Save admin" fields={[
+              { name: "fullName", label: "Name", required: true, defaultValue: a.fullName, half: true },
+              { name: "email", label: "Email", type: "email", required: true, defaultValue: a.email, half: true },
+            ]} />
+            <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-slate-100 pt-3 dark:border-slate-800">
+              <ActionButton url={`/api/super-admin/users/${a.id}/setup-link`} label="Send password setup link" confirmText={`Email a password setup link to ${a.email}?`} />
+              <span className="muted">Sent to the email saved above.</span>
+            </div>
+          </div>
+        ))}
       </section>
       <section className="card">
         <h2 className="h2">Usage, last 14 days</h2>

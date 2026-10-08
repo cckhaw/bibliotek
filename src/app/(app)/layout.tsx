@@ -31,6 +31,7 @@ const NAV: Record<Role, { href: string; label: string }[]> = {
   SUPER_ADMIN: [
     { href: "/super-admin", label: "Tenants" },
     { href: "/super-admin/tenants/new", label: "Provision" },
+    { href: "/super-admin/profile", label: "My profile" },
   ],
 };
 
