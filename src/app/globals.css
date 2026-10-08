@@ -7,6 +7,46 @@
   --color-brand-600: #4f46e5;
   --color-brand-700: #4338ca;
   --color-brand-900: #312e81;
+  --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+}
+
+/*
+ * Earth & nature theme for the public home page. Scoped to .theme-earth so the signed-in app keeps its own look.
+ * The brand tokens are re-pointed to moss green, so btn-primary / focus rings inside the page turn green automatically.
+ * Semantic --e-* variables switch with the OS light/dark setting. All text pairings meet WCAG AA (most AAA).
+ */
+.theme-earth {
+  --color-brand-50: #e2e9d6; --color-brand-100: #c9d6b4; --color-brand-600: #3e6434; --color-brand-700: #2f4d2a; --color-brand-900: #1f3322;
+  --e-bg: #f7f2e7;       /* sand */
+  --e-alt: #efe7d6;      /* deeper sand, alternate sections */
+  --e-sage: #e2e9d6;     /* pale sage, soft panels */
+  --e-surface: #fffdf8;  /* cards */
+  --e-text: #2a2619;     /* bark */
+  --e-muted: #6a604a;
+  --e-border: #e3d8c0;
+  --e-accent: #3e6434;   /* moss: links, icons */
+  --e-clay: #8a4224;     /* terracotta: secondary links */
+  --e-hill-1: #c9d6b4; --e-hill-2: #9db98a; --e-hill-3: #5f8a4e; --e-hill-4: #2f4d2a;
+  --e-ochre: #d4a03c;
+  --e-deep: #1f3322;     /* forest panels */
+  --e-deep-text: #f6f0e1;
+  --e-deep-muted: #c9d6b4;
+  background: var(--e-bg); color: var(--e-text);
+}
+@media (prefers-color-scheme: dark) {
+  .theme-earth {
+    --color-brand-600: #4d7a3f;
+    --e-bg: #141f16; --e-alt: #1a281c; --e-sage: #1f3322; --e-surface: #1f3322;
+    --e-text: #f6f0e1; --e-muted: #c9d6b4; --e-border: #2e4631;
+    --e-accent: #9fc486; --e-clay: #e6a07c;
+    --e-hill-1: #1f3322; --e-hill-2: #2b4a2f; --e-hill-3: #3a6137; --e-hill-4: #141f16;
+    --e-deep: #0f1a11; --e-deep-text: #f6f0e1; --e-deep-muted: #c9d6b4;
+  }
+}
+.theme-earth :focus-visible { outline-color: var(--e-ochre); }
+@media (prefers-color-scheme: dark) {
+  .theme-earth .input { background-color: #0f1a11; border-color: #2e4631; color: #f6f0e1; }
+  .theme-earth .input::placeholder { color: #9fb28a; }
 }
 
 /* Shared building blocks that variants @apply must be utilities in Tailwind v4 (not @layer components). */

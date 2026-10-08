@@ -3,7 +3,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 /** Lets a visitor jump to their school's public catalog by school code. */
-export function FindLibrary() {
+export function FindLibrary({ tone = "default" }: { tone?: "default" | "onDark" }) {
   const router = useRouter();
   const [code, setCode] = useState("");
   return (
@@ -13,7 +13,7 @@ export function FindLibrary() {
     >
       <label htmlFor="school-code" className="sr-only">School code</label>
       <input id="school-code" value={code} onChange={(e) => setCode(e.target.value)} className="input" placeholder="School code, e.g. demo-uni" autoComplete="off" />
-      <button className="btn-primary shrink-0">Browse catalog</button>
+      <button className={tone === "onDark" ? "btn shrink-0 bg-(--e-deep-text) text-(--e-deep) hover:bg-white" : "btn-primary shrink-0"}>Browse catalog</button>
     </form>
   );
 }
