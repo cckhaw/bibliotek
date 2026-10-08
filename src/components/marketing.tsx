@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -51,20 +52,6 @@ export function Hills({ className = "" }: { className?: string }) {
   );
 }
 
-/** Faint topographic contour lines for the deep-green panels. */
-export function Contours() {
-  return (
-    <svg aria-hidden viewBox="0 0 800 400" preserveAspectRatio="xMidYMid slice" className="pointer-events-none absolute inset-0 size-full opacity-[0.16]" fill="none" stroke="var(--e-deep-muted)" strokeWidth="1.2">
-      {[0, 1, 2, 3, 4, 5, 6].map((i) => (
-        <path key={i} d={`M-20 ${300 - i * 34}C120 ${240 - i * 30} 230 ${330 - i * 32} 380 ${270 - i * 30}s250-90 440-${20 + i * 6}`} />
-      ))}
-      {[0, 1, 2, 3].map((i) => (
-        <ellipse key={`e${i}`} cx="640" cy="110" rx={30 + i * 34} ry={18 + i * 20} />
-      ))}
-    </svg>
-  );
-}
-
 export function Leaf({ className = "size-5" }: { className?: string }) {
   return (
     <svg aria-hidden viewBox="0 0 24 24" className={className} fill="currentColor"><path d="M20 4C9 4 4 9.5 4 16c0 1.4.3 2.7.8 3.8C6 15.5 9.5 12 14 10c-3 3-5 6-6 10 .7.1 1.4.2 2 .2 6.5 0 10-6 10-16Z" /></svg>
@@ -102,22 +89,33 @@ export function Pill({ tone, children }: { tone: Tone; children: ReactNode }) {
   return <span className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-xs font-medium ${TONES[tone]}`}>{children}</span>;
 }
 
-/** Mock panel chrome so product "screenshots" are built from HTML: always sharp, theme-aware, no image files. */
-export function Panel({ title, children }: { title: string; children: ReactNode }) {
+/** A small product caption that sits on a photo, so the picture still says what the product does. */
+export function Chip({ children, tone, label }: { children: ReactNode; tone?: Tone; label?: string }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-(--e-border) bg-(--e-surface) shadow-xl shadow-[#2f4d2a]/10" aria-hidden>
-      <div className="flex items-center gap-1.5 border-b border-(--e-border) bg-(--e-alt) px-4 py-2.5">
-        <span className="size-2.5 rounded-full bg-[#a4502d]" /><span className="size-2.5 rounded-full bg-[#d4a03c]" /><span className="size-2.5 rounded-full bg-[#4d7a3f]" />
-        <span className="ml-3 text-xs font-medium text-(--e-muted)">{title}</span>
-      </div>
-      <div className="space-y-2 p-4 text-sm">{children}</div>
+    <div className="flex max-w-full items-center gap-2.5 rounded-xl bg-(--e-surface)/95 px-3 py-2 text-sm text-(--e-text) shadow-lg shadow-black/15 backdrop-blur">
+      <span className="min-w-0">{children}</span>
+      {tone && label && <Pill tone={tone}>{label}</Pill>}
     </div>
   );
 }
 
-export function Row({ children, tone = "plain" }: { children: ReactNode; tone?: "plain" | "good" | "warn" | "bad" | "focus" }) {
-  const t = { plain: "bg-(--e-alt)", good: "bg-[#e2e9d6] text-[#2f4d2a]", warn: "bg-[#f6e7c2] text-[#2a2619]", bad: "bg-[#f3d9cc] text-[#8a4224]", focus: "bg-(--e-sage)" }[tone];
-  return <div className={`flex items-center justify-between gap-3 rounded-lg px-3 py-2 ${t}`}>{children}</div>;
+/**
+ * Real photography in a soft frame with an offset sage block behind it. `shape="arch"` gives the hero its arched window.
+ * Photos are decorative context; the alt text still describes them for screen-reader users.
+ */
+export function Photo({ src, alt, width, height, sizes, priority, shape = "round", caption, className = "" }: {
+  src: string; alt: string; width: number; height: number; sizes: string; priority?: boolean;
+  shape?: "round" | "arch"; caption?: ReactNode; className?: string;
+}) {
+  return (
+    <figure className={`relative isolate mx-auto w-full max-w-md ${className}`}>
+      <div aria-hidden className="absolute inset-0 -z-10 translate-x-3 translate-y-3 rounded-[2rem] bg-(--e-hill-1) sm:translate-x-4 sm:translate-y-4" />
+      <div className={`overflow-hidden shadow-xl shadow-[#2f4d2a]/20 ring-1 ring-black/5 ${shape === "arch" ? "rounded-t-[999px] rounded-b-[2rem]" : "rounded-[2rem]"}`}>
+        <Image src={src} alt={alt} width={width} height={height} sizes={sizes} priority={priority} className="aspect-[10/11] h-auto w-full object-cover" />
+      </div>
+      {caption && <figcaption className="absolute inset-x-4 bottom-4 flex justify-start">{caption}</figcaption>}
+    </figure>
+  );
 }
 
 export function SiteFooter() {
@@ -134,7 +132,7 @@ export function SiteFooter() {
         <div><p className={h}>Students</p><Link className={a} href="/register">Register</Link><Link className={a} href="/login">Sign in</Link><a className={a} href="#find">Browse a catalog</a></div>
         <div><p className={h}>Staff</p><Link className={a} href="/login">Librarian &amp; admin sign-in</Link></div>
       </div>
-      <div className="border-t border-white/10 py-4 text-center text-xs text-(--e-deep-muted)">© {new Date().getFullYear()} Bibliotek</div>
+      <div className="border-t border-white/10 px-4 py-4 text-center text-xs text-(--e-deep-muted)">© {new Date().getFullYear()} Bibliotek · Photography from <a className="underline hover:text-white" href="https://www.pexels.com" target="_blank" rel="noreferrer">Pexels</a> contributors</div>
     </footer>
   );
 }

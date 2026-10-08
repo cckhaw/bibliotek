@@ -7,7 +7,7 @@ libraries (branches), and a book borrowed at one branch can be returned at any o
 
 **Stack:** Next.js 15 (App Router) · TypeScript · PostgreSQL with Row-Level Security · Prisma 6 · Tailwind CSS 4 · Resend (email)
 
-Design decisions and the schema review are in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+Design decisions and the schema review are in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). Home-page photography credits: [docs/PHOTO_CREDITS.md](docs/PHOTO_CREDITS.md).
 
 ---
 

@@ -3,7 +3,8 @@ import { redirect } from "next/navigation";
 import { getCurrentUserOrNull } from "@/lib/auth/session";
 import { HOME } from "@/lib/auth/rbac";
 import { TIER_PRESETS } from "@/lib/services/licensing";
-import { Check, Contours, Feature, Hills, Leaf, Panel, Pill, Row, SiteFooter, SiteHeader } from "@/components/marketing";
+import Image from "next/image";
+import { Check, Chip, Feature, Hills, Leaf, Photo, Pill, SiteFooter, SiteHeader } from "@/components/marketing";
 import { FindLibrary } from "@/components/FindLibrary";
 
 export const metadata = { title: "Bibliotek — Library management for schools & universities" };
@@ -74,12 +75,9 @@ export default async function Landing() {
               </div>
               <p className="mt-4 text-sm text-(--e-muted)">Library staff are invited by their school. Schools are set up by the platform operator.</p>
             </div>
-            <Panel title="Circulation desk — Science Library">
-              <div className="grid grid-cols-2 gap-1 rounded-lg bg-(--e-alt) p-1 text-center text-xs font-medium"><span className="rounded-md py-1.5 text-(--e-muted)">Checkout</span><span className="rounded-md bg-(--e-surface) py-1.5 shadow-sm">Return</span></div>
-              <div className="rounded-lg border-2 border-(--e-accent)/60 px-3 py-2.5 font-mono text-sm">CLEAN-001<span className="ml-0.5 inline-block h-4 w-px animate-pulse bg-(--e-accent) align-middle" /></div>
-              <Row tone="good"><span>“Clean Code” returned · Sam Student</span><Pill tone="moss">Done</Pill></Row>
-              <Row tone="warn"><span>Returned at another branch — location updated</span><Pill tone="ochre">Cross-branch</Pill></Row>
-            </Panel>
+            <Photo shape="arch" priority src="/photos/hero-shelves.webp" width={1000} height={1100} sizes="(min-width: 768px) 28rem, 90vw"
+              alt="A long aisle of tall wooden bookshelves lit by warm hanging lamps"
+              caption={<Chip tone="ochre" label="Cross-branch"><b className="font-semibold">“Clean Code”</b> returned at Science Library</Chip>} />
           </div>
           <Hills className="relative -mb-px h-16 sm:h-24 md:h-32" />
         </section>
@@ -98,28 +96,28 @@ export default async function Landing() {
 
         <div id="features" />
         <Feature eyebrow="Circulation" title="Scan, lend, return — anywhere on campus"
-          visual={<Panel title="Cross-branch return"><Row><span>Home branch</span><b>Main Campus Library</b></Row><Row><span>Checked out at</span><b>Main Campus Library</b></Row><Row tone="focus"><span>Returned at</span><b>Science Library</b></Row><p className="px-1 pt-1 text-xs text-(--e-muted)">Current location updated. Home cataloguing unchanged.</p></Panel>}>
+          visual={<Photo src="/photos/ladder-shelves.webp" width={900} height={1100} sizes="(min-width: 768px) 28rem, 90vw" alt="Floor-to-ceiling shelves of colourful books beside a rustic wooden ladder" caption={<Chip tone="moss" label="Home branch unchanged">Returned at <b className="font-semibold">Science Library</b></Chip>} />}>
           <p>The librarian desk is built for barcode scanners: scan, hear it confirm, and the cursor is back in the field for the next book.</p>
           <ul className="space-y-2"><Check>Return a book at a different branch — only its current location changes</Check><Check>Per-student-type loan periods and limits</Check><Check>Extension requests with librarian approval</Check></ul>
         </Feature>
 
         <div className="bg-(--e-alt)">
           <Feature flip eyebrow="Catalogue & imports" title="Bring your whole collection in, in minutes"
-            visual={<Panel title="Books import — validation"><Row tone="good"><span>1,248 rows ready to import</span><Pill tone="moss">OK</Pill></Row><Row tone="bad"><span>Line 14 · isbn — check digit failed</span></Row><Row tone="bad"><span>Line 87 · branch_code — unknown branch</span></Row></Panel>}>
+            visual={<Photo src="/photos/card-catalogue.webp" width={1000} height={1000} sizes="(min-width: 768px) 28rem, 90vw" alt="Rows of wooden card-catalogue drawers with labels, topped with desk lamps" caption={<Chip tone="clay" label="2 to fix">1,246 of 1,248 rows ready to import</Chip>} />}>
             <p>Upload a CSV, validate it first, and get a report that points at the exact line and column of every problem. Good rows import; bad rows come back for fixing.</p>
             <ul className="space-y-2"><Check>ISBN-10/13 check-digit validation</Check><Check>Dewey, Library of Congress, genre, subject and tags</Check><Check>Bulk student import with automatic account invitations</Check></ul>
           </Feature>
         </div>
 
         <Feature eyebrow="Fines & reminders" title="Overdue handling that runs itself"
-          visual={<Panel title="Student — My library"><Row><span>The Pragmatic Programmer</span><Pill tone="ochre">Due in 2d</Pill></Row><Row><span>Cosmos</span><Pill tone="clay">3d overdue</Pill></Row><Row><span>Unpaid fines</span><b>$1.00</b></Row></Panel>}>
+          visual={<Photo src="/photos/book-stack.webp" width={900} height={1100} sizes="(min-width: 768px) 28rem, 90vw" alt="A tall stack of books in front of warmly lit library shelves" caption={<Chip tone="clay" label="3d overdue">Reminder emailed automatically</Chip>} />}>
           <p>Due-soon and overdue emails go out automatically, fines accrue daily by your rules, and borrowing pauses when unpaid fines reach your limit.</p>
           <ul className="space-y-2"><Check>Free rental days, grace period, daily rate and cap per policy</Check><Check>Librarians can waive or record payment — every change is audited</Check><Check>Safe to re-run: no duplicate emails or double charges</Check></ul>
         </Feature>
 
         <div className="bg-(--e-alt)">
           <Feature flip eyebrow="Rosters" title="Duty rosters your librarians actually receive"
-            visual={<Panel title="Week of Oct 5"><Row><span>Mon · Lee</span><span className="text-(--e-muted)">08:00–12:00 · Main</span></Row><Row><span>Tue · Lee</span><span className="text-(--e-muted)">13:00–17:00 · Science</span></Row><Row tone="good"><span>Published — librarians notified</span><Pill tone="moss">Sent</Pill></Row></Panel>}>
+            visual={<Photo src="/photos/reading-room.webp" width={900} height={1100} sizes="(min-width: 768px) 28rem, 90vw" alt="An open book on a light wooden table in a bright library reading area" caption={<Chip tone="moss" label="Sent">Roster published, librarians notified</Chip>} />}>
             <p>Draft the week by branch and time, publish when it&apos;s ready, and each librarian gets one email. Change a published shift and they&apos;re told again. Double-booking is blocked.</p>
           </Feature>
         </div>
@@ -164,7 +162,8 @@ export default async function Landing() {
         {/* Find a library + closing call to action */}
         <section id="find" className="mx-auto max-w-6xl px-4 py-14 sm:px-6 md:py-20">
           <div className="relative isolate overflow-hidden rounded-3xl border border-white/10 bg-(--e-deep) p-6 text-(--e-deep-text) sm:p-12">
-            <Contours />
+            <Image src="/photos/wall-of-books.webp" alt="" fill sizes="(min-width: 1152px) 72rem, 100vw" className="-z-20 object-cover" />
+            <div aria-hidden className="absolute inset-0 -z-10 bg-(--e-deep)/[0.88]" />
             <div className="relative grid items-center gap-8 md:grid-cols-2">
               <div>
                 <h2 className="font-display text-4xl font-semibold tracking-tight">Looking for a book?</h2>
