@@ -2,56 +2,73 @@
 
 @theme {
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --color-brand-50: #eef2ff;
-  --color-brand-100: #e0e7ff;
-  --color-brand-600: #4f46e5;
-  --color-brand-700: #4338ca;
-  --color-brand-900: #312e81;
   --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+
+  /*
+   * Earth & nature palette, applied app-wide by RE-DEFINING the scales the code already uses, so every page, button,
+   * badge and form follows it without per-page edits (and new pages inherit it automatically).
+   *   slate   -> warm sand / bark neutrals in light mode, deep forest in dark mode
+   *   emerald -> moss        (success, positive)
+   *   amber   -> ochre       (warnings)
+   *   red     -> brick/clay  (errors, destructive)
+   *   brand   -> moss green  (primary actions, active nav, focus)
+   */
+  --color-slate-50: #f7f2e7;  --color-slate-100: #efe7d6; --color-slate-200: #e3d8c0; --color-slate-300: #cdbf9f;
+  --color-slate-400: #a69c82; --color-slate-500: #6a604a; --color-slate-600: #4f4838; --color-slate-700: #3f4a35;
+  --color-slate-800: #2a3a2b; --color-slate-900: #1c2b1f; --color-slate-950: #141f16;
+
+  --color-emerald-50: #f0f4e8; --color-emerald-100: #e2e9d6; --color-emerald-200: #c9d6b4; --color-emerald-300: #a9be93;
+  --color-emerald-400: #86a56f; --color-emerald-500: #5f8a4e; --color-emerald-600: #4d7a3f; --color-emerald-700: #3e6434;
+  --color-emerald-800: #2f4d2a; --color-emerald-900: #1f3322; --color-emerald-950: #142015;
+
+  --color-amber-50: #fbf4e0; --color-amber-100: #f6e7c2; --color-amber-200: #efd59a; --color-amber-300: #e4bd68;
+  --color-amber-400: #d4a03c; --color-amber-500: #c18a2a; --color-amber-600: #a0701f; --color-amber-700: #835a1a;
+  --color-amber-800: #6a4a18; --color-amber-900: #553d17; --color-amber-950: #3a290f;
+
+  --color-red-50: #fbefe9; --color-red-100: #f3d9cc; --color-red-200: #e9bba6; --color-red-300: #efb59a;
+  --color-red-400: #e6a07c; --color-red-500: #b4553a; --color-red-600: #a4402a; --color-red-700: #8a3322;
+  --color-red-800: #6e2a1c; --color-red-900: #5a2418; --color-red-950: #3a150e;
+
+  --color-brand-50: #e2e9d6; --color-brand-100: #c9d6b4; --color-brand-600: #3e6434; --color-brand-700: #2f4d2a; --color-brand-900: #1f3322;
+  /* Link text is separate from brand-600: a button background (needs white text on it) and link text (needs to be light
+     on dark backgrounds) require opposite lightness in dark mode. */
+  --color-brand-link: #3e6434;
 }
 
-/*
- * Earth & nature theme for the public home page. Scoped to .theme-earth so the signed-in app keeps its own look.
- * The brand tokens are re-pointed to moss green, so btn-primary / focus rings inside the page turn green automatically.
- * Semantic --e-* variables switch with the OS light/dark setting. All text pairings meet WCAG AA (most AAA).
- */
-.theme-earth {
-  --color-brand-50: #e2e9d6; --color-brand-100: #c9d6b4; --color-brand-600: #3e6434; --color-brand-700: #2f4d2a; --color-brand-900: #1f3322;
-  --e-bg: #f7f2e7;       /* sand */
-  --e-alt: #efe7d6;      /* deeper sand, alternate sections */
-  --e-sage: #e2e9d6;     /* pale sage, soft panels */
-  --e-surface: #fffdf8;  /* cards */
+/* Semantic tokens, available everywhere. They follow the OS light/dark setting. */
+:root {
+  --e-bg: #f7f2e7;       /* sand: page background */
+  --e-alt: #efe7d6;      /* deeper sand: alternate sections, hover */
+  --e-sage: #e2e9d6;     /* pale sage: soft panels */
+  --e-surface: #fffdf8;  /* cards and inputs */
   --e-text: #2a2619;     /* bark */
   --e-muted: #6a604a;
   --e-border: #e3d8c0;
-  --e-accent: #3e6434;   /* moss: links, icons */
-  --e-clay: #8a4224;     /* terracotta: secondary links */
+  --e-accent: #3e6434;   /* moss: icons, links */
+  --e-clay: #8a4224;     /* terracotta: secondary links, eyebrows */
   --e-hill-1: #c9d6b4; --e-hill-2: #9db98a; --e-hill-3: #5f8a4e; --e-hill-4: #2f4d2a;
   --e-ochre: #d4a03c;
+  --e-input-border: #8d8467; /* form field outline: 3.3:1+ against sand and white, so people can see where to type (WCAG 1.4.11) */
+  --e-focus: #3e6434;    /* focus ring: 6:1 on sand */
   --e-deep: #1f3322;     /* forest panels */
   --e-deep-text: #f6f0e1;
   --e-deep-muted: #c9d6b4;
-  background: var(--e-bg); color: var(--e-text);
 }
 @media (prefers-color-scheme: dark) {
-  .theme-earth {
-    --color-brand-600: #4d7a3f;
+  :root {
+    --color-brand-600: #4d7a3f; --color-brand-link: #9fc486;
     --e-bg: #141f16; --e-alt: #1a281c; --e-sage: #1f3322; --e-surface: #1f3322;
     --e-text: #f6f0e1; --e-muted: #c9d6b4; --e-border: #2e4631;
     --e-accent: #9fc486; --e-clay: #e6a07c;
     --e-hill-1: #1f3322; --e-hill-2: #2b4a2f; --e-hill-3: #3a6137; --e-hill-4: #141f16;
-    --e-deep: #0f1a11; --e-deep-text: #f6f0e1; --e-deep-muted: #c9d6b4;
+    --e-focus: #d4a03c; --e-input-border: #6b8d6a;
+    --e-deep: #0f1a11;
   }
-}
-.theme-earth :focus-visible { outline-color: var(--e-ochre); }
-@media (prefers-color-scheme: dark) {
-  .theme-earth .input { background-color: #0f1a11; border-color: #2e4631; color: #f6f0e1; }
-  .theme-earth .input::placeholder { color: #9fb28a; }
 }
 
 /* Shared building blocks that variants @apply must be utilities in Tailwind v4 (not @layer components). */
 @utility btn {
-  @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 disabled:cursor-not-allowed disabled:opacity-50;
+  @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
 }
 @utility badge {
   @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium;
@@ -59,31 +76,33 @@
 
 @layer base {
   :root { color-scheme: light dark; }
-  body { @apply bg-slate-50 text-slate-900 antialiased; }
-  @media (prefers-color-scheme: dark) {
-    body { @apply bg-slate-950 text-slate-100; }
-  }
+  body { background: var(--e-bg); color: var(--e-text); @apply antialiased; }
+  :focus-visible { outline-color: var(--e-focus); }
+  ::selection { background: #c9d6b4; color: #1f3322; }
   /* 16px minimum prevents iOS zoom-on-focus */
   input, select, textarea { font-size: 16px; }
 }
 
 @layer components {
-  .card { @apply rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5 dark:border-slate-800 dark:bg-slate-900; }
+  .card { @apply rounded-xl border border-(--e-border) bg-(--e-surface) p-4 shadow-sm shadow-[#2f4d2a]/5 sm:p-5; }
   .btn-primary { @apply btn bg-brand-600 text-white hover:bg-brand-700; }
-  .btn-ghost { @apply btn border border-slate-300 bg-transparent hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800; }
+  .btn-ghost { @apply btn border border-slate-300 bg-transparent hover:bg-(--e-alt) dark:border-(--e-border); }
   .btn-danger { @apply btn bg-red-600 text-white hover:bg-red-700; }
   .btn-sm { @apply min-h-8 px-3 py-1 text-xs; }
   .label { @apply mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300; }
-  .input { @apply block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/30 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100; }
+  .input { @apply block w-full rounded-lg border border-(--e-input-border) bg-(--e-surface) px-3 py-2 text-(--e-text) shadow-sm placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/30 dark:bg-slate-950; }
   .badge-green { @apply badge bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300; }
   .badge-amber { @apply badge bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300; }
   .badge-red { @apply badge bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300; }
   .badge-gray { @apply badge bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300; }
   .table-wrap { @apply -mx-4 overflow-x-auto sm:mx-0; }
   .table { @apply w-full min-w-[32rem] text-left text-sm; }
-  .table th { @apply whitespace-nowrap border-b border-slate-200 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:border-slate-800; }
-  .table td { @apply border-b border-slate-100 px-3 py-2.5 align-top dark:border-slate-800/60; }
-  .h1 { @apply text-xl font-semibold tracking-tight sm:text-2xl; }
-  .h2 { @apply mb-3 text-base font-semibold sm:text-lg; }
+  .table th { @apply whitespace-nowrap border-b border-(--e-border) px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400; }
+  .table td { @apply border-b border-slate-100 px-3 py-2.5 align-top dark:border-(--e-border)/60; }
+  .h1 { @apply font-display text-2xl font-semibold tracking-tight sm:text-3xl; }
+  .h2 { @apply mb-3 font-display text-lg font-semibold sm:text-xl; }
   .muted { @apply text-sm text-slate-500 dark:text-slate-400; }
 }
+
+/* The home page wraps itself in .theme-earth; the page background and text now come from the global tokens. */
+.theme-earth { background: var(--e-bg); color: var(--e-text); }

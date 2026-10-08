@@ -47,7 +47,7 @@ export function CsvUpload({ endpoint, title, templateHref, columns }: { endpoint
   return (
     <section className="card">
       <h2 className="h2">{title}</h2>
-      <p className="muted mb-3">Columns: <code className="break-words">{columns}</code>. <a className="text-brand-600 underline" href={templateHref} download>Download template</a></p>
+      <p className="muted mb-3">Columns: <code className="break-words">{columns}</code>. <a className="text-brand-link underline" href={templateHref} download>Download template</a></p>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <input ref={input} type="file" accept=".csv,text/csv" onChange={(e) => { setFile(e.target.files?.[0] ?? null); setResult(null); }} className="input" aria-label={`${title} CSV file`} />
         <div className="flex gap-2">
@@ -55,14 +55,14 @@ export function CsvUpload({ endpoint, title, templateHref, columns }: { endpoint
           <button className="btn-primary" disabled={!file || busy} onClick={() => send(false)}>{busy ? "Working…" : "Import"}</button>
         </div>
       </div>
-      {error && <p role="alert" className="mt-3 text-sm text-red-700">{error}</p>}
+      {error && <p role="alert" className="mt-3 text-sm text-red-700 dark:text-red-400">{error}</p>}
       {result && (
         <div className="mt-4 space-y-3" role="status">
           <p className="text-sm font-medium">{result.dryRun ? "Validation only — nothing saved. " : "Import complete. "}<span className="font-normal">{summary(result)}</span></p>
           {result.errorCount > 0 ? (
             <>
               <div className="flex items-center justify-between">
-                <p className="text-sm text-amber-700">{result.errorCount} row problem(s){result.truncated ? " (showing first 500)" : ""}. Valid rows {result.dryRun ? "would be" : "were"} imported; fix the rest and re-upload them.</p>
+                <p className="text-sm text-amber-700 dark:text-amber-300">{result.errorCount} row problem(s){result.truncated ? " (showing first 500)" : ""}. Valid rows {result.dryRun ? "would be" : "were"} imported; fix the rest and re-upload them.</p>
                 <button className="btn-ghost btn-sm" onClick={downloadErrors}>Download report</button>
               </div>
               <div className="table-wrap max-h-72 overflow-y-auto">
@@ -70,7 +70,7 @@ export function CsvUpload({ endpoint, title, templateHref, columns }: { endpoint
                   <tbody>{result.errors.map((e, i) => <tr key={i}><td>{e.line}</td><td>{e.field ?? "—"}</td><td>{e.message}</td></tr>)}</tbody></table>
               </div>
             </>
-          ) : <p className="text-sm text-emerald-700">No problems found.</p>}
+          ) : <p className="text-sm text-emerald-700 dark:text-emerald-400">No problems found.</p>}
         </div>
       )}
     </section>

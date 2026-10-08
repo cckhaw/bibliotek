@@ -27,7 +27,7 @@ export default async function AdminHome() {
         <Stat label="Active loans" value={d.active} />
         <Stat label="Overdue" value={d.overdue} tone={d.overdue ? "red" : undefined} />
         <Stat label="Unpaid fines" value={money(d.fines)} />
-        <Stat label="Pending sign-ups" value={d.pending} sub={d.pending ? <Link className="text-brand-600 underline" href="/librarian/requests">Review</Link> : undefined} />
+        <Stat label="Pending sign-ups" value={d.pending} sub={d.pending ? <Link className="text-brand-link underline" href="/librarian/requests">Review</Link> : undefined} />
       </div>
       <section className="card space-y-4">
         <div className="flex items-center justify-between"><h2 className="h2 !mb-0">License — {d.tenant.tier.toLowerCase()}</h2><span className="muted">Mode: {d.usage.mode.toLowerCase()}</span></div>

@@ -49,7 +49,7 @@ export function Workbench({ branches, defaultBranchId }: { branches: Branch[]; d
         <div role="tablist" className="grid grid-cols-2 gap-1 rounded-lg bg-slate-100 p-1 dark:bg-slate-800">
           {(["checkout", "return"] as const).map((m) => (
             <button type="button" role="tab" aria-selected={mode === m} key={m} onClick={() => { setMode(m); setTimeout(() => barcode.current?.focus(), 0); }}
-              className={`rounded-md py-2 text-sm font-medium capitalize ${mode === m ? "bg-white shadow dark:bg-slate-950" : "text-slate-500"}`}>{m}</button>
+              className={`rounded-md py-2 text-sm font-medium capitalize ${mode === m ? "bg-(--e-surface) shadow-sm dark:bg-slate-950" : "text-slate-500 dark:text-slate-300"}`}>{m}</button>
           ))}
         </div>
         <div>

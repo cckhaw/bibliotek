@@ -212,6 +212,14 @@ The integration suite covers: tenant isolation (RLS), license limits, CSV import
 (exactly one wins), fine accrual and waivers, reminder and outbox idempotency, roster overlap, the env-managed super admin,
 password-reset codes (expiry, attempt limit, single use), operator profile rules, and email delivery success/failure paths.
 
+## Theme
+
+One earth-and-nature palette (moss, sage, sand, bark, terracotta, ochre) is used by the whole app and follows the OS light/dark setting.
+It lives in **`src/app/globals.css`**: the Tailwind `slate`, `emerald`, `amber`, `red` and `brand` scales are re-defined there, so existing
+classes pick it up everywhere, and new pages inherit it automatically. Semantic tokens (`--e-bg`, `--e-surface`, `--e-text`, `--e-border`,
+`--e-accent`…) are available for custom styling. To re-brand, change those values; text and control colours were checked against WCAG AA
+(form borders 3:1+), so re-check contrast after changing them.
+
 ## Project layout
 
 ```

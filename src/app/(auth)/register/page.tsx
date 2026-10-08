@@ -17,7 +17,7 @@ export default function RegisterPage() {
         { name: "phone", label: "Phone (optional)", half: true },
         { name: "password", label: "Password", type: "password", required: true, hint: "At least 10 characters." },
       ]} />
-      <p className="muted mt-4">Already registered? <Link className="text-brand-600 underline" href="/login">Sign in</Link></p>
+      <p className="muted mt-4">Already registered? <Link className="text-brand-link underline" href="/login">Sign in</Link></p>
     </>
   );
 }

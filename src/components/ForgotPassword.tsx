@@ -77,10 +77,10 @@ export function ForgotPassword() {
             <button className="btn-primary" disabled={busy}>{busy ? "Updating…" : "Update password"}</button>
           </form>
           <div className="mt-3 flex items-center justify-between text-sm">
-            <button type="button" className="text-brand-600 underline disabled:text-slate-400 disabled:no-underline" disabled={busy || cooldown > 0} onClick={() => sendCode()}>
+            <button type="button" className="text-brand-link underline disabled:text-slate-400 disabled:no-underline" disabled={busy || cooldown > 0} onClick={() => sendCode()}>
               {cooldown > 0 ? `Resend code in ${cooldown}s` : "Resend code"}
             </button>
-            <button type="button" className="text-slate-500 underline" onClick={() => { setStep("email"); setError(null); }}>Use a different email</button>
+            <button type="button" className="text-slate-500 underline dark:text-slate-400" onClick={() => { setStep("email"); setError(null); }}>Use a different email</button>
           </div>
         </>
       )}

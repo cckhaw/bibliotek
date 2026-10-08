@@ -3,6 +3,7 @@ import { HOME } from "@/lib/auth/rbac";
 import { NavLinks } from "@/components/NavLinks";
 import { LogoutButton } from "@/components/LogoutButton";
 import Link from "next/link";
+import { Mark } from "@/components/marketing";
 import type { Role } from "@prisma/client";
 
 const NAV: Record<Role, { href: string; label: string }[]> = {
@@ -39,11 +40,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const user = await requirePage();
   return (
     <div className="min-h-dvh md:flex">
-      <aside className="border-b border-slate-200 bg-white md:sticky md:top-0 md:h-dvh md:w-56 md:shrink-0 md:border-b-0 md:border-r dark:border-slate-800 dark:bg-slate-900">
+      <aside className="border-b border-(--e-border) bg-(--e-surface) md:sticky md:top-0 md:h-dvh md:w-56 md:shrink-0 md:border-b-0 md:border-r">
         <div className="flex items-center justify-between gap-2 px-4 py-3 md:block">
-          <Link href={HOME[user.role]} className="text-lg font-bold tracking-tight">Bibliotek</Link>
+          <Link href={HOME[user.role]} className="flex items-center gap-2 font-display text-xl font-semibold tracking-tight" aria-label="Bibliotek home"><Mark className="size-8" />Bibliotek</Link>
           <div className="text-right md:mt-1 md:text-left">
-            <p className="max-w-[10rem] truncate text-xs text-slate-500 md:max-w-none">{user.tenantName ?? "Platform"}</p>
+            <p className="max-w-[10rem] truncate text-xs text-slate-500 dark:text-slate-400 md:max-w-none">{user.tenantName ?? "Platform"}</p>
           </div>
         </div>
         <nav aria-label="Primary" className="flex gap-1 overflow-x-auto px-3 pb-2 md:flex-col md:overflow-visible md:pb-0">
@@ -56,7 +57,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </div>
       </aside>
       <div className="min-w-0 flex-1">
-        <header className="flex items-center justify-between border-b border-slate-200 px-4 py-2 md:hidden dark:border-slate-800">
+        <header className="flex items-center justify-between border-b border-(--e-border) px-4 py-2 md:hidden">
           <span className="truncate text-sm">{user.fullName}</span>
           <LogoutButton />
         </header>
