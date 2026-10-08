@@ -14,6 +14,12 @@ npm run dev
 ```
 Demo logins: `superadmin@bibliotek.test`, `admin@demo.edu`, `librarian@demo.edu`, `student@students.demo.edu`. Public catalog: `/t/demo-uni`.
 
+## Super admin account
+Set `SUPERADMIN_EMAIL` and `SUPERADMIN_PASSWORD` (12+ chars; optional `SUPERADMIN_NAME`) in your environment. On every server start
+the app creates that platform operator or updates its password, so rotating it is: change the variable, redeploy.
+It will never modify an account that belongs to a school. If you previously loaded the demo SQL/seed, delete the demo
+`superadmin@bibliotek.test` user, because its password is public.
+
 ## Tests
 ```bash
 npm test            # unit: fine maths, ISBN, CSV parsing

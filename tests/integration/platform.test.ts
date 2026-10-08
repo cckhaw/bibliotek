@@ -98,7 +98,7 @@ describe("catalog CSV import", () => {
 
   it("the same barcode may exist in two different schools", async () => {
     await withTenant(B.id, (tx) => importCatalog(tx, { tenantId: B.id, actorId: B.adminId, csv: "title,author,category,branch_code,barcode\nDune,Frank Herbert,Fiction,MAIN,DUNE-001\n" }));
-    expect(await db.bookCopy.count({ where: { barcode: "DUNE-001" } })).toBe(2);
+    expect(await db.bookCopy.count({ where: { barcode: "DUNE-001", tenantId: { in: [A.id, B.id] } } })).toBe(2);
   });
 
   it("enforces the book license and imports nothing when over the cap", async () => {
