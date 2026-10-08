@@ -68,7 +68,26 @@ Tenant isolation is enforced by PostgreSQL itself, so the app connects as **two 
 | `bibliotek_app` (plain login role, **not** the owner) | Every tenant request. Row-Level Security applies, and with no tenant set it sees zero rows. | `DATABASE_URL` |
 | `bibliotek` (database owner) | Migrations, seed, login, tenant lookup, super-admin screens, scheduled jobs. Bypasses RLS. | `DATABASE_URL_OWNER`, `SYSTEM_DATABASE_URL` |
 
-Never point `DATABASE_URL` at the owner or a superuser; tenant isolation would silently stop working.
+Never point `DATABASE_URL` at the owner, a superuser, or any role with `BYPASSRLS`: tenant isolation would stop working at the database level.
+The app **checks this itself** on the first tenant request and, if the role is exempt from Row-Level Security, refuses to serve tenant data and logs
+`[security] Tenant isolation is not enforced: …` rather than leaking. On top of RLS, every tenant query is also forced to the current tenant in application
+code (`src/lib/tenant-scope.ts`), so isolation does not depend on a single layer.
+
+**Verify your database** (run as the owner role; `bibliotek_app` must show `f | f`, and the table owner must be `bibliotek`, not `bibliotek_app`):
+```sql
+SELECT rolname, rolsuper, rolbypassrls FROM pg_roles WHERE rolname IN ('bibliotek', 'bibliotek_app');
+SELECT tableowner FROM pg_tables WHERE schemaname = 'public' AND tablename = 'users';
+```
+**Repair** (as an admin/superuser) if the runtime role is exempt or lacks access, then redeploy:
+```sql
+ALTER ROLE bibliotek_app NOSUPERUSER NOBYPASSRLS;
+GRANT USAGE ON SCHEMA public TO bibliotek_app;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO bibliotek_app;
+GRANT EXECUTE ON FUNCTION app_current_tenant() TO bibliotek_app;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO bibliotek_app;
+```
+> Some hosts (for example Neon) give roles created in their dashboard `BYPASSRLS`, and the default role they provide owns the tables.
+> Create `bibliotek_app` with SQL (`CREATE ROLE ... LOGIN PASSWORD ...`) and use *its* credentials in `DATABASE_URL`.
 
 ---
 
@@ -177,7 +196,7 @@ tests/                      unit tests, and tests/integration for the database-b
 
 ## Security notes
 
-- **Tenant isolation:** Postgres RLS on every tenant table through a non-owner role; transaction-scoped tenant context; fail-closed with no tenant set.
+- **Tenant isolation, two independent layers:** (1) Postgres RLS on every tenant table through a non-owner role, with a transaction-scoped tenant context, failing closed with no tenant set; (2) every tenant query is forced to the current tenant in application code. A startup check refuses to serve tenant data if the runtime database role could bypass RLS.
 - **Sessions** are httpOnly SameSite=Lax cookies; the user and tenant state is re-checked on every request, so suspensions and role changes apply immediately.
 - **Passwords** are bcrypt-hashed. Login runs a hash comparison even for unknown emails and is throttled.
 - **Cross-origin requests** to state-changing endpoints are rejected (Origin check plus SameSite).
