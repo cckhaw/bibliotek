@@ -8,7 +8,7 @@ const schema = z.object({
   APP_URL: z.string().url().default("http://localhost:3000"),
   RESEND_API_KEY: z.string().optional(), // preferred: send through Resend (https://resend.com)
   SMTP_URL: z.string().optional(), // fallback: e.g. smtps://user:pass@smtp.example.com; neither set = log emails to console
-  MAIL_FROM: z.string().default("Bibliotek <no-reply@bibliotek.local>"),
+  MAIL_FROM: z.string().default("Bibliotek <noreply@khaw.cc>"),
 });
 
 export type Env = z.infer<typeof schema>;
