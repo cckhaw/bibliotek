@@ -93,7 +93,7 @@ export async function assertSystemRole() {
  * (see infra-errors.ts); never a hostname, username or password.
  */
 export async function healthCheck() {
-  const checks: Record<string, string> = { env: "ok", systemDb: "skipped", systemRole: "skipped", schema: "skipped", appDb: "skipped", rls: "skipped" };
+  const checks: Record<string, string> = { env: "ok", systemDb: "skipped", systemRole: "skipped", schema: "skipped", appDb: "skipped", appTables: "skipped", rls: "skipped" };
   try { env(); } catch { checks.env = "ENV_INVALID"; return checks; }
 
   const attempt = async (key: string, fn: () => Promise<unknown>) => {
@@ -107,6 +107,11 @@ export async function healthCheck() {
     try { checks.systemRole = (await checkRlsEnforced(sysDb())) ? "ok" : "SYSTEM_RESTRICTED"; } catch (e) { checks.systemRole = classifyInfraError(e) ?? "ERROR"; }
   }
   if (await attempt("appDb", () => appDb().$queryRaw`SELECT 1`)) {
+    // Can the restricted runtime role actually read the tables (grants)? RLS will return zero rows, but a missing GRANT errors.
+    await attempt("appTables", async () => {
+      await appDb().$queryRaw`SELECT 1 FROM users LIMIT 1`;
+      await appDb().$queryRaw`SELECT 1 FROM branches LIMIT 1`;
+    });
     try {
       const problem = await checkRlsEnforced(appDb());
       checks.rls = problem ? "RLS_EXEMPT" : "ok";
