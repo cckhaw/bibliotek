@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { AppError } from "./errors";
+import { classifyInfraError, infraMessage } from "./infra-errors";
 
 type Ctx = { params: Promise<Record<string, string>> };
 
@@ -35,6 +36,12 @@ export function errorResponse(e: unknown): Response {
       { error: { code: "VALIDATION", message: "Invalid input", details: e.issues.map((i) => ({ path: i.path.join("."), message: i.message })) } },
       { status: 400 },
     );
+  }
+  const infra = classifyInfraError(e);
+  if (infra) {
+    // Safe code for the user/operator; the full detail stays in the server log only.
+    console.error(`[infra:${infra}]`, e instanceof Error ? e.message : e);
+    return NextResponse.json({ error: { code: infra, message: infraMessage(infra) } }, { status: 503 });
   }
   console.error("Unhandled error", e);
   return NextResponse.json({ error: { code: "INTERNAL", message: "Something went wrong" } }, { status: 500 });

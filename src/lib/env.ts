@@ -16,7 +16,7 @@ const withScheme = (v: unknown) => {
 
 const schema = z.object({
   DATABASE_URL: z.string().min(1), // runtime role, RLS enforced
-  SYSTEM_DATABASE_URL: z.string().min(1).optional(), // owner role: login, super-admin, cron fan-out
+  SYSTEM_DATABASE_URL: z.preprocess(clean, z.string().min(1).optional()), // owner role: login, super-admin, cron fan-out
   AUTH_SECRET: z.string().min(32, "AUTH_SECRET must be at least 32 characters"),
   CRON_SECRET: z.string().min(8),
   APP_URL: z.preprocess(withScheme, z.string().url().default(defaultAppUrl)).transform((u) => u.replace(/\/+$/, "")), // no trailing slash: links are built as `${APP_URL}/path`

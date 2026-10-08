@@ -134,6 +134,26 @@ You do not need to run `npm` yourself. Everything can be done from the Vercel an
 
 ---
 
+## Troubleshooting: `/api/health` and error codes
+
+Open `https://<your-site>/api/health`. It returns `ok` or, per check, a short **code** (never a hostname, username or password):
+
+| Check | Code | Meaning / fix |
+|---|---|---|
+| `env` | `ENV_INVALID` | A variable is missing or malformed (`DATABASE_URL`, `AUTH_SECRET` 32+ chars, `CRON_SECRET`, `APP_URL`…). The server log names the variable. |
+| `systemDb` / `appDb` | `DB_AUTH` | Wrong database username or password (URL-encode special characters, or use letters and digits only). |
+| | `DB_UNREACHABLE` | Wrong host/port, database paused, or network blocked. The host is the database server, not your website. |
+| | `DB_TLS` | Add `?sslmode=require` to the URL. |
+| | `DB_MISSING` | The database name in the URL doesn't exist. |
+| | `DB_BUSY` | Too many connections; use your host's pooled connection string. |
+| `schema` | `DB_SCHEMA` | Migrations haven't been applied. |
+| | `DB_PERMISSION` | `bibliotek_app` lacks grants. Run the repair SQL under "Two database roles". |
+| `systemRole` | `SYSTEM_RESTRICTED` | `SYSTEM_DATABASE_URL` is missing/blank or uses the restricted role. It must be the **owner** role, or nobody can sign in. |
+| `rls` | `RLS_EXEMPT` | `DATABASE_URL` uses an owner/superuser/`BYPASSRLS` role, so the app refuses to serve tenant data. Use `bibliotek_app`. |
+
+The same codes appear in sign-in errors ("The service is temporarily unavailable (DB_AUTH)…") and the details are in the Vercel runtime logs
+(`[infra:…]`, `[security]`, `[config]`).
+
 ## Super admin account
 
 `SUPERADMIN_EMAIL` and `SUPERADMIN_PASSWORD` define the platform operator. On every server start the app creates it, or updates the

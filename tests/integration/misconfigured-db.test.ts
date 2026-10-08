@@ -10,10 +10,11 @@ describe("runtime database role is the table owner (misconfiguration)", () => {
     const log = vi.spyOn(console, "error").mockImplementation(() => {});
     const ran = vi.fn();
     await expect(withTenant("any-tenant", async () => { ran(); return 1; })).rejects.toMatchObject({
-      code: "DATABASE_MISCONFIGURED",
-      message: expect.stringContaining("owns the tables"),
+      code: "RLS_EXEMPT",
+      status: 503,
+      message: expect.not.stringContaining("bibliotek"), // the caller never sees the role name
     });
     expect(ran).not.toHaveBeenCalled(); // the callback (and its queries) never ran
-    expect(log).toHaveBeenCalledWith(expect.stringContaining("[security] Tenant isolation is not enforced"));
+    expect(log).toHaveBeenCalledWith(expect.stringContaining("owns the tables")); // the detail is in the server log
   });
 });
