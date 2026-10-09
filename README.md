@@ -214,7 +214,7 @@ password-reset codes (expiry, attempt limit, single use), operator profile rules
 
 ## Theme
 
-One colour system is used by the whole app and follows the OS light/dark setting: a neutral canvas (slate-50 / zinc-950), a softened system green as the only tint (`#42B860` light, `#40BF60` dark) for interactive and active states, translucent neutral containers, and deep forest green (emerald-800 / emerald-200) for green text. The tokens live in `src/app/globals.css`.
+One colour system is used by the whole app and follows the OS light/dark setting: a neutral canvas (slate-50 / zinc-950), a softened system green as the only tint (`#42B860` light, `#40BF60` dark) for interactive and active states, translucent neutral containers, deep forest green (emerald-800 / emerald-200) for green text, and four supporting hues (blue, violet, orange, teal) used only for icon tiles, labels and per-item accents. The landing page follows the same light/dark setting as the app. The tokens live in `src/app/globals.css`.
 It lives in **`src/app/globals.css`**: the Tailwind `slate`, `emerald`, `amber`, `red` and `brand` scales are re-defined there, so existing
 classes pick it up everywhere, and new pages inherit it automatically. Semantic tokens (`--e-bg`, `--e-surface`, `--e-text`, `--e-border`,
 `--e-accent`…) are available for custom styling. To re-brand, change those values; text and control colours were checked against WCAG AA

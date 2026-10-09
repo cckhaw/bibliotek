@@ -15,6 +15,7 @@ export interface PlanPanel {
   books: string;
   points: readonly string[];
   badge?: string;
+  hue: "blue" | "violet" | "teal";
 }
 
 const clamp = (n: number, lo: number, hi: number) => Math.min(Math.max(n, lo), hi);
@@ -93,7 +94,7 @@ export function PlansAccordion({
         return (
           <div key={p.key} role="listitem" tabIndex={0} aria-current={isActive ? "true" : undefined}
             ref={(el) => { panels.current[i] = el; }}
-            className="pa-panel"
+            className={`pa-panel hue-${p.hue}`}
             style={{ flexGrow: open ? grow : 1, transform: rot ? `rotateY(${rot}deg)` : undefined }}
             onMouseEnter={() => trigger === "hover" && setActive(i)}
             onFocus={() => setActive(i)}
@@ -111,7 +112,7 @@ export function PlansAccordion({
                 <li key={pt} className="pa-feature flex gap-2.5"
                   ref={(el) => { (features.current[i] ??= [])[j] = el; }}
                   style={open ? undefined : { opacity: 0, transform: "translateX(-14px)" }}>
-                  <Tick className="mt-0.5 size-4 shrink-0 text-(--e-muted)" /><span>{pt}</span>
+                  <Tick className="mt-0.5 size-4 shrink-0 text-(--hue)" /><span>{pt}</span>
                 </li>
               ))}
             </ul>

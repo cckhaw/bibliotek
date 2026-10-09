@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   title: { default: "Bibliotek — Library management", template: "%s · Bibliotek" },
   description: "Multi-tenant library management for schools and universities.",
 };
-export const viewport: Viewport = { width: "device-width", initialScale: 1 };
+export const viewport: Viewport = { width: "device-width", initialScale: 1, colorScheme: "light dark" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

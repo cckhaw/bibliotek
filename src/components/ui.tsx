@@ -18,8 +18,8 @@ export function LoanBadge({ dueDate, returnedAt }: { dueDate: Date; returnedAt: 
 
 export function Stat({ label, value, sub, tone }: { label: string; value: ReactNode; sub?: ReactNode; tone?: "red" }) {
   return (
-    <div className="card">
-      <p className="muted">{label}</p>
+    <div className="card stat">
+      <p className="muted flex items-center gap-2"><span aria-hidden className="size-2 rounded-full bg-(--hue)" />{label}</p>
       <p className={`mt-2 text-[1.75rem] leading-none font-semibold tracking-[-0.022em] tabular-nums ${tone === "red" ? "text-red-600 dark:text-red-400" : ""}`}>{value}</p>
       {sub && <p className="muted mt-0.5">{sub}</p>}
     </div>

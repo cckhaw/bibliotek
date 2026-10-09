@@ -20,7 +20,7 @@
   min-width: 0;
   overflow: hidden;
   padding: 1.25rem;
-  border: 1px solid var(--e-border);
+  border: 1px solid var(--e-rule);
   border-radius: 0.5rem;
   background: var(--e-surface);
   outline: none;
@@ -35,10 +35,19 @@
     box-shadow 200ms ease-out;
 }
 
-/* The open plan is marked by a stronger neutral edge and a lifted fill: the green is kept for actions. */
+/* Each plan has its own hue: a 2px bar across the top, and the open plan's edge picks it up. */
+.pa-panel::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 2px;
+  background: var(--hue);
+}
+
 .pa-panel[aria-current="true"] {
   background: var(--e-alt);
-  border-color: var(--e-input-border);
+  border-color: color-mix(in srgb, var(--hue) 60%, var(--e-rule));
 }
 
 .pa-panel:focus-visible {

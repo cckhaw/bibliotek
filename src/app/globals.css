@@ -37,13 +37,19 @@
   --e-field: #ffffff;              /* inputs stay opaque so they read as places to type */
   --e-text: #18181b;               /* zinc-900 */
   --e-muted: #52525b;              /* zinc-600: 7.4:1 on the canvas */
-  --e-border: rgb(229 229 229 / 0.5);   /* neutral-200/50 */
+  --e-border: rgb(229 229 229 / 0.5);   /* neutral-200/50: soft edge of translucent containers */
+  --e-rule: #e4e4e7;               /* zinc-200: solid structural lines (section rules, ruled grids, panel frames) */
+
+  /* A small supporting palette so the page is not all neutral. Used for icon tiles, labels and per-item accents only,
+     never for large fills, and never beside the primary green on the same control. Each hue has a fill (graphics, >=3:1
+     against its own tint) and a text variant (>=4.5:1 on the canvas). */
+  --c-blue: #2563eb;   --c-blue-text: #1d4ed8;
+  --c-violet: #7c3aed; --c-violet-text: #6d28d9;
+  --c-orange: #dc510a; --c-orange-text: #c2410c;
+  --c-teal: #0d9488;   --c-teal-text: #0f766e;
   --e-accent: var(--tint-text);    /* green icons/links that sit on the canvas */
   --e-input-border: #8e8e93;       /* 3.1:1+ on white and the canvas (WCAG 1.4.11) */
   --e-focus: var(--tint-text);
-  --e-deep: #18181b;               /* footer and closing panel: neutral, not green */
-  --e-deep-text: #fafafa;
-  --e-deep-muted: #a1a1aa;
 
   /* Materials: translucent chrome that content scrolls under. The bright top edge is the light catching the glass. */
   --mat-bg: rgb(248 250 252 / 0.72);
@@ -75,8 +81,12 @@
     --e-text: #fafafa;
     --e-muted: #a1a1aa;            /* zinc-400: 7.8:1 */
     --e-border: rgb(255 255 255 / 0.1);
+    --e-rule: #27272a;             /* zinc-800 */
+    --c-blue: #60a5fa;   --c-blue-text: #60a5fa;
+    --c-violet: #a78bfa; --c-violet-text: #a78bfa;
+    --c-orange: #fb923c; --c-orange-text: #fb923c;
+    --c-teal: #2dd4bf;   --c-teal-text: #2dd4bf;
     --e-input-border: #6e6e73;
-    --e-deep: #18181b;
 
     --mat-bg: rgb(9 9 11 / 0.72); --mat-edge: rgb(255 255 255 / 0.07); --hairline: rgb(255 255 255 / 0.1);
     --lift: none;
@@ -86,9 +96,9 @@
 /* Shared building blocks that variants @apply must be utilities in Tailwind v4 (not @layer components). */
 @utility btn {
   /* Press is instant (100ms); release springs back. Touch devices get the 44pt minimum target. */
-  @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+  @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50 aria-disabled:cursor-not-allowed aria-disabled:opacity-50;
   transition: transform var(--spring-dur, 450ms) var(--spring), background-color 150ms ease-out, opacity 150ms ease-out;
-  &:active:not(:disabled) { transform: scale(0.97); transition-duration: 100ms, 100ms, 100ms; transition-timing-function: ease-out; }
+  &:active:not(:disabled):not([aria-disabled="true"]) { transform: scale(0.97); transition-duration: 100ms, 100ms, 100ms; transition-timing-function: ease-out; }
   @media (pointer: coarse) { min-height: 2.75rem; }
 }
 @utility badge {
@@ -139,6 +149,20 @@
   .edge-fade::after { content: ""; position: absolute; inset-inline: 0; top: 100%; height: 1.25rem; pointer-events: none; background: linear-gradient(to bottom, var(--mat-bg), transparent); }
   @media (min-width: 48rem) { .edge-fade::after { display: none; } }
 
+  /* Hue scopes: set --hue / --hue-text for everything inside. */
+  .hue-blue { --hue: var(--c-blue); --hue-text: var(--c-blue-text); }
+  .hue-violet { --hue: var(--c-violet); --hue-text: var(--c-violet-text); }
+  .hue-orange { --hue: var(--c-orange); --hue-text: var(--c-orange-text); }
+  .hue-teal { --hue: var(--c-teal); --hue-text: var(--c-teal-text); }
+  /* Icon tile (the Settings-app squircle): a 14% tint of the hue behind a glyph in the hue. Size it with size-*. */
+  .tile { @apply grid shrink-0 place-items-center rounded-[0.625rem]; background: color-mix(in srgb, var(--hue) 14%, transparent); color: var(--hue); }
+  /* Stat tiles pick up a hue by position, so dashboards get colour without every page choosing one. */
+  .stat { --hue: var(--e-muted); }
+  .stat:nth-child(4n+1) { --hue: var(--c-blue); }
+  .stat:nth-child(4n+2) { --hue: var(--c-orange); }
+  .stat:nth-child(4n+3) { --hue: var(--c-teal); }
+  .stat:nth-child(4n+4) { --hue: var(--c-violet); }
+
   /* Segmented control: the thumb is one element that springs between segments. */
   .segmented { @apply relative grid auto-cols-fr grid-flow-col gap-0 rounded-xl bg-black/5 p-1 dark:bg-white/8; }
   .segmented-thumb { @apply absolute inset-y-1 left-1 rounded-lg bg-white dark:bg-white/15; width: calc((100% - 0.5rem) / var(--n, 2)); transform: translateX(calc(var(--i, 0) * 100%)); box-shadow: 0 1px 3px rgb(0 0 0 / 0.14), 0 0 0 0.5px rgb(0 0 0 / 0.06); transition: transform var(--spring-move-dur, 600ms) var(--spring-move); }
@@ -148,43 +172,41 @@
   /* Enter motion. Content arrives from where the list begins (new log rows from the top, pages from just below). */
   .page-enter { animation: rise 600ms var(--spring-move) backwards; }
   .row-enter { animation: drop 450ms var(--spring) backwards; }
+  /* Staggered entrance: set --i (0, 1, 2...) on each child. */
+  .stagger-in { animation: rise 600ms var(--spring-move) backwards; animation-delay: calc(var(--i, 0) * 70ms); }
+  /* Chrome that grows a hairline only once content scrolls under it (where scroll-driven animation is supported). */
+  .scroll-line::after { content: ""; position: absolute; inset-inline: 0; bottom: 0; height: 1px; background: var(--e-rule); }
+  @supports (animation-timeline: scroll()) {
+    .scroll-line::after { opacity: 0; animation: fade-in linear both; animation-timeline: scroll(root); animation-range: 0 64px; }
+  }
+  /* Content settles into place as it scrolls into view, driven by scroll position (no JS, no observers). */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .reveal { animation: rise linear both; animation-timeline: view(); animation-range: entry 0% entry 40%; }
+    }
+  }
   [data-slide] { transition-timing-function: var(--spring); transition-duration: 450ms; }
 }
 
 @keyframes rise { from { opacity: 0; transform: translateY(6px); } }
 @keyframes drop { from { opacity: 0; transform: translateY(-6px) scale(0.98); } }
 @keyframes fade { from { opacity: 0; } }
+@keyframes fade-in { to { opacity: 1; } }
 
 /* Reduced motion keeps the feedback and drops the movement: short cross-fades, no slides, no scale. */
 @media (prefers-reduced-motion: reduce) {
-  .page-enter, .row-enter { animation: fade 200ms ease backwards; }
+  .page-enter, .row-enter, .stagger-in { animation: fade 200ms ease backwards; animation-delay: 0s; }
   .btn:active:not(:disabled) { transform: none; }
   .segmented-thumb, [data-slide] { transition-property: opacity, background-color; transition-duration: 0.01ms; }
 }
 /* Reduced transparency: frosted becomes solid. */
 @media (prefers-reduced-transparency: reduce) {
-  .material { background: var(--e-surface); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .material { background: var(--e-bg); -webkit-backdrop-filter: none; backdrop-filter: none; }
   .edge-fade::after { display: none; }
 }
 /* Increased contrast: defined edges instead of soft shadows. */
 @media (prefers-contrast: more) {
-  .material { background: var(--e-surface); -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: 0 1px 0 var(--e-text); }
+  .material { background: var(--e-bg); -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: 0 1px 0 var(--e-text); }
   .card { box-shadow: 0 0 0 1px var(--e-text); }
   .btn-ghost { box-shadow: inset 0 0 0 1px var(--e-text); }
 }
-
-/*
- * The public landing page is always dark (neutral near-black, flat 1px zinc borders, no shadows), whatever the OS
- * setting, so it carries its own copy of the dark tokens. Keep these in step with the dark block in :root above.
- */
-.marketing {
-  color-scheme: dark;
-  --tint: #40bf60; --tint-text: #40bf60; --forest: #a7f3d0;
-  --e-bg: #09090b; --e-alt: #18181b; --e-surface: #101012; --e-field: #18181b;
-  --e-text: #fafafa; --e-muted: #a1a1aa; --e-border: #27272a; --e-input-border: #6e6e73;
-  --e-focus: #40bf60; --e-accent: var(--tint-text);
-  background: var(--e-bg); color: var(--e-text);
-}
-.marketing .btn, .marketing .input { border-radius: 0.5rem; }
-/* Overscroll / rubber-band area matches the page instead of flashing the light body colour. */
-body:has(.marketing) { background: #09090b; }
