@@ -18,12 +18,12 @@ export function Mark({ className = "size-9" }: { className?: string }) {
 export function SiteHeader() {
   const link = "rounded-lg px-3 py-2 text-sm font-medium text-(--e-muted) hover:text-(--e-text)";
   return (
-    <header className="sticky top-0 z-20 border-b border-(--e-border) bg-(--e-bg)/90 backdrop-blur">
+    <header className="material edge-fade sticky top-0 z-20 md:after:block">
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-30 focus:rounded focus:bg-(--e-surface) focus:px-3 focus:py-2">Skip to main content</a>
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
         <Link href="/" className="flex items-center gap-2.5" aria-label="Bibliotek home">
           <Mark />
-          <span className="font-display text-xl font-semibold tracking-tight">Bibliotek</span>
+          <span className="text-lg font-semibold tracking-[-0.015em]">Bibliotek</span>
         </Link>
         <nav aria-label="Main" className="hidden items-center md:flex">
           <a className={link} href="#features">Features</a>
@@ -32,7 +32,7 @@ export function SiteHeader() {
           <a className={link} href="#find">Find a library</a>
         </nav>
         <div className="flex items-center gap-2">
-          <Link href="/login" className="btn-ghost btn-sm border-(--e-border) hover:bg-(--e-alt) sm:min-h-10 sm:px-4 sm:text-sm">Sign in</Link>
+          <Link href="/login" className="btn-ghost btn-sm sm:min-h-10 sm:px-4 sm:text-sm">Sign in</Link>
           <Link href="/register" className="btn-primary btn-sm hidden sm:inline-flex sm:min-h-10 sm:px-4 sm:text-sm">Student sign-up</Link>
         </div>
       </div>
@@ -63,8 +63,8 @@ export function Feature({ eyebrow, title, children, visual, flip }: { eyebrow: s
   return (
     <section className="mx-auto grid max-w-6xl items-center gap-8 px-4 py-12 sm:px-6 md:grid-cols-2 md:gap-14 md:py-16">
       <div className={flip ? "md:order-2" : ""}>
-        <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-(--e-clay)"><Leaf className="size-4" />{eyebrow}</p>
-        <h3 className="mt-3 font-display text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">{title}</h3>
+        <p className="text-sm font-semibold text-(--e-clay)">{eyebrow}</p>
+        <h3 className="mt-2 text-3xl font-semibold leading-[1.1] tracking-[-0.025em] sm:text-4xl">{title}</h3>
         <div className="mt-4 space-y-3 text-base leading-relaxed text-(--e-muted)">{children}</div>
       </div>
       <div className={flip ? "md:order-1" : ""}>{visual}</div>
@@ -100,7 +100,7 @@ export function Chip({ children, tone, label }: { children: ReactNode; tone?: To
 }
 
 /**
- * Real photography in a soft frame with an offset sage block behind it. `shape="arch"` gives the hero its arched window.
+ * Real photography in a soft frame. `shape="arch"` gives the hero its arched window.
  * Photos are decorative context; the alt text still describes them for screen-reader users.
  */
 export function Photo({ src, alt, width, height, sizes, priority, shape = "round", caption, className = "" }: {
@@ -108,9 +108,8 @@ export function Photo({ src, alt, width, height, sizes, priority, shape = "round
   shape?: "round" | "arch"; caption?: ReactNode; className?: string;
 }) {
   return (
-    <figure className={`relative isolate mx-auto w-full max-w-md ${className}`}>
-      <div aria-hidden className="absolute inset-0 -z-10 translate-x-3 translate-y-3 rounded-[2rem] bg-(--e-hill-1) sm:translate-x-4 sm:translate-y-4" />
-      <div className={`overflow-hidden shadow-xl shadow-[#2f4d2a]/20 ring-1 ring-black/5 ${shape === "arch" ? "rounded-t-[999px] rounded-b-[2rem]" : "rounded-[2rem]"}`}>
+    <figure className={`relative mx-auto w-full max-w-md ${className}`}>
+      <div className={`overflow-hidden shadow-xl shadow-[#2f4d2a]/15 ring-1 ring-black/5 ${shape === "arch" ? "rounded-t-[999px] rounded-b-[2rem]" : "rounded-[2rem]"}`}>
         <Image src={src} alt={alt} width={width} height={height} sizes={sizes} priority={priority} className="aspect-[10/11] h-auto w-full object-cover" />
       </div>
       {caption && <figcaption className="absolute inset-x-4 bottom-4 flex justify-start">{caption}</figcaption>}
@@ -125,7 +124,7 @@ export function SiteFooter() {
     <footer className="bg-(--e-deep) text-(--e-deep-text)">
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
         <div>
-          <p className="flex items-center gap-2.5 font-display text-xl font-semibold"><Mark />Bibliotek</p>
+          <p className="flex items-center gap-2.5 text-lg font-semibold tracking-[-0.015em]"><Mark />Bibliotek</p>
           <p className="mt-3 max-w-xs text-sm text-(--e-deep-muted)">Library management for schools and universities: every campus, one catalogue, rooted in your community.</p>
         </div>
         <div><p className={h}>Platform</p><a className={a} href="#features">Features</a><a className={a} href="#plans">Plans</a><a className={a} href="#roles">Who it&apos;s for</a></div>

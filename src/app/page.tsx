@@ -57,13 +57,9 @@ export default async function Landing() {
       <main id="main">
         {/* Hero */}
         <section className="relative overflow-hidden bg-gradient-to-b from-(--e-sage) to-(--e-bg)">
-          <div aria-hidden className="absolute -right-24 -top-24 size-96 rounded-full bg-(--e-hill-1) opacity-60 blur-3xl" />
           <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-4 pb-16 pt-12 sm:px-6 md:grid-cols-2 md:gap-14 md:pb-24 md:pt-20">
             <div>
-              <p className="inline-flex items-center gap-2 rounded-full border border-(--e-border) bg-(--e-surface) px-3 py-1 text-xs font-semibold text-(--e-accent)">
-                <Leaf className="size-3.5" /> Built for schools &amp; universities
-              </p>
-              <h1 className="mt-5 font-display text-5xl font-semibold leading-[1.05] tracking-tight sm:text-6xl">
+              <h1 className="text-5xl font-semibold leading-[1.05] tracking-[-0.03em] sm:text-6xl">
                 A library that <span className="text-(--e-accent)">grows</span> with every campus.
               </h1>
               <p className="mt-5 max-w-xl text-lg leading-relaxed text-(--e-muted)">
@@ -88,7 +84,7 @@ export default async function Landing() {
             {VALUES.map(([t, d]) => (
               <li key={t} className="flex gap-3">
                 <Leaf className="mt-1 size-5 shrink-0 text-(--e-ochre)" />
-                <div><p className="font-display text-lg font-semibold">{t}</p><p className="text-sm text-(--e-deep-muted)">{d}</p></div>
+                <div><p className="text-lg font-semibold tracking-[-0.01em]">{t}</p><p className="text-sm text-(--e-deep-muted)">{d}</p></div>
               </li>
             ))}
           </ul>
@@ -124,12 +120,12 @@ export default async function Landing() {
 
         {/* Roles */}
         <section id="roles" className="mx-auto max-w-6xl px-4 py-14 sm:px-6 md:py-20">
-          <div className="mx-auto max-w-2xl text-center"><h2 className="font-display text-4xl font-semibold tracking-tight">A place for everyone in the library</h2><p className="mt-3 text-base text-(--e-muted)">Four role-based portals, one sign-in.</p></div>
+          <div className="mx-auto max-w-2xl text-center"><h2 className="text-4xl font-semibold leading-[1.1] tracking-[-0.025em]">A place for everyone in the library</h2><p className="mt-3 text-base text-(--e-muted)">Four role-based portals, one sign-in.</p></div>
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {ROLES.map((r) => (
-              <div key={r.title} className="flex flex-col rounded-2xl border border-(--e-border) bg-(--e-surface) p-5 transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#2f4d2a]/10">
+              <div key={r.title} className="card flex flex-col">
                 <RoleIcon name={r.icon} />
-                <h3 className="mt-4 font-display text-xl font-semibold">{r.title}</h3>
+                <h3 className="mt-4 text-xl font-semibold tracking-[-0.015em]">{r.title}</h3>
                 <p className="mt-1 flex-1 text-sm leading-relaxed text-(--e-muted)">{r.text}</p>
                 <Link href={r.cta.href} className="mt-4 text-sm font-semibold text-(--e-clay) hover:underline">{r.cta.label} →</Link>
               </div>
@@ -140,16 +136,16 @@ export default async function Landing() {
         {/* Plans */}
         <section id="plans" className="bg-(--e-alt) py-14 md:py-20">
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
-            <div className="mx-auto max-w-2xl text-center"><h2 className="font-display text-4xl font-semibold tracking-tight">Plans that fit your institution</h2><p className="mt-3 text-base text-(--e-muted)">Capacity is licensed by students and book copies. Operators can adjust limits per school at any time.</p></div>
+            <div className="mx-auto max-w-2xl text-center"><h2 className="text-4xl font-semibold leading-[1.1] tracking-[-0.025em]">Plans that fit your institution</h2><p className="mt-3 text-base text-(--e-muted)">Capacity is licensed by students and book copies. Operators can adjust limits per school at any time.</p></div>
             <div className="mt-10 grid gap-4 md:grid-cols-3">
               {PLANS.map((p) => {
                 const featured = "featured" in p && p.featured;
                 return (
-                  <div key={p.key} className={`flex flex-col rounded-2xl border bg-(--e-surface) p-6 ${featured ? "border-(--e-accent) ring-2 ring-(--e-accent)" : "border-(--e-border)"}`}>
+                  <div key={p.key} className={`card flex flex-col sm:p-6 ${featured ? "ring-2 ring-(--e-accent)" : ""}`}>
                     {featured && <span className="mb-2 w-fit"><Pill tone="ochre">Suggested for schools</Pill></span>}
-                    <h3 className="font-display text-2xl font-semibold">{p.name}</h3><p className="text-sm text-(--e-muted)">{p.blurb}</p>
-                    <p className="mt-5 font-display text-3xl font-semibold">{TIER_PRESETS[p.key].maxStudents.toLocaleString()}<span className="ml-1.5 font-sans text-sm font-normal text-(--e-muted)">students</span></p>
-                    <p className="font-display text-3xl font-semibold">{TIER_PRESETS[p.key].maxBooks.toLocaleString()}<span className="ml-1.5 font-sans text-sm font-normal text-(--e-muted)">book copies</span></p>
+                    <h3 className="text-2xl font-semibold tracking-[-0.02em]">{p.name}</h3><p className="text-sm text-(--e-muted)">{p.blurb}</p>
+                    <p className="mt-5 text-3xl font-semibold tracking-[-0.022em] tabular-nums">{TIER_PRESETS[p.key].maxStudents.toLocaleString()}<span className="ml-1.5 font-sans text-sm font-normal text-(--e-muted)">students</span></p>
+                    <p className="text-3xl font-semibold tracking-[-0.022em] tabular-nums">{TIER_PRESETS[p.key].maxBooks.toLocaleString()}<span className="ml-1.5 font-sans text-sm font-normal text-(--e-muted)">book copies</span></p>
                     <ul className="mt-5 flex-1 space-y-2 text-sm text-(--e-muted)">{p.points.map((x) => <Check key={x}>{x}</Check>)}</ul>
                   </div>
                 );
@@ -166,7 +162,7 @@ export default async function Landing() {
             <div aria-hidden className="absolute inset-0 -z-10 bg-(--e-deep)/[0.88]" />
             <div className="relative grid items-center gap-8 md:grid-cols-2">
               <div>
-                <h2 className="font-display text-4xl font-semibold tracking-tight">Looking for a book?</h2>
+                <h2 className="text-4xl font-semibold leading-[1.1] tracking-[-0.025em]">Looking for a book?</h2>
                 <p className="mt-3 text-(--e-deep-muted)">Enter your school&apos;s code to search its catalogue — no account needed.</p>
               </div>
               <div>

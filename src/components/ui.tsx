@@ -20,7 +20,7 @@ export function Stat({ label, value, sub, tone }: { label: string; value: ReactN
   return (
     <div className="card">
       <p className="muted">{label}</p>
-      <p className={`mt-1 text-2xl font-semibold ${tone === "red" ? "text-red-600 dark:text-red-400" : ""}`}>{value}</p>
+      <p className={`mt-2 text-[1.75rem] leading-none font-semibold tracking-[-0.022em] tabular-nums ${tone === "red" ? "text-red-600 dark:text-red-400" : ""}`}>{value}</p>
       {sub && <p className="muted mt-0.5">{sub}</p>}
     </div>
   );
@@ -33,7 +33,8 @@ export function Meter({ label, used, limit, disabled }: { label: string; used: n
     <div className={disabled ? "opacity-50" : ""}>
       <div className="mb-1 flex justify-between text-sm"><span>{label}{disabled && " (not enforced)"}</span><span className="tabular-nums">{used.toLocaleString()} / {limit.toLocaleString()}</span></div>
       <div className="h-2 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={label}>
-        <div className={`h-full ${tone}`} style={{ width: `${pct}%` }} />
+        {/* scaleX, not width: the bar animates on the compositor and springs to a new value from wherever it is. */}
+        <div data-slide className={`h-full w-full origin-left ${tone}`} style={{ transform: `scaleX(${pct / 100})`, transitionProperty: "transform" }} />
       </div>
     </div>
   );
