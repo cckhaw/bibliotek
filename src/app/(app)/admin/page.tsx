@@ -37,7 +37,7 @@ export default async function AdminHome() {
       </section>
       <section className="card">
         <h2 className="h2">Recent activity</h2>
-        <ul className="divide-y divide-slate-100 text-sm dark:divide-slate-800">
+        <ul className="divide-y divide-slate-100 text-sm dark:divide-zinc-800">
           {d.recent.map((a) => <li key={a.id} className="flex flex-wrap justify-between gap-2 py-2"><span><b className="font-medium">{a.action.replaceAll("_", " ").toLowerCase()}</b> {a.user ? `· ${a.user.fullName}` : ""}</span><span className="muted">{fmtDateTime(a.createdAt)}</span></li>)}
         </ul>
       </section>

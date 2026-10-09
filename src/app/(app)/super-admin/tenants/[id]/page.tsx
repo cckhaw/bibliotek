@@ -57,12 +57,12 @@ export default async function TenantPage({ params }: { params: Promise<{ id: str
       <section className="card space-y-5">
         <div><h2 className="h2 !mb-1">School admins</h2><p className="muted">Fix a mistyped name or email, then send a setup link so they can choose a password. Changes are recorded in the audit trail.</p></div>
         {admins.length === 0 ? <p className="muted">This school has no admin account.</p> : admins.map((a) => (
-          <div key={a.id} className="rounded-xl border border-slate-200 p-4 dark:border-slate-800">
+          <div key={a.id} className="rounded-xl border border-slate-200 p-4 dark:border-zinc-800">
             <ApiForm action={`/api/super-admin/users/${a.id}`} method="PATCH" reset={false} submit="Save admin" fields={[
               { name: "fullName", label: "Name", required: true, defaultValue: a.fullName, half: true },
               { name: "email", label: "Email", type: "email", required: true, defaultValue: a.email, half: true },
             ]} />
-            <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-slate-100 pt-3 dark:border-slate-800">
+            <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-slate-100 pt-3 dark:border-zinc-800">
               <ActionButton url={`/api/super-admin/users/${a.id}/setup-link`} label="Send password setup link" confirmText={`Email a password setup link to ${a.email}?`} />
               <span className="muted">Sent to the email saved above.</span>
             </div>
@@ -78,7 +78,7 @@ export default async function TenantPage({ params }: { params: Promise<{ id: str
       </section>
       <section className="card">
         <h2 className="h2">Audit trail</h2>
-        <ul className="divide-y divide-slate-100 text-sm dark:divide-slate-800">{audit.map((a) => <li key={a.id} className="flex justify-between gap-2 py-2"><span>{a.action.replaceAll("_", " ").toLowerCase()}</span><span className="muted">{fmtDateTime(a.createdAt)}</span></li>)}</ul>
+        <ul className="divide-y divide-slate-100 text-sm dark:divide-zinc-800">{audit.map((a) => <li key={a.id} className="flex justify-between gap-2 py-2"><span>{a.action.replaceAll("_", " ").toLowerCase()}</span><span className="muted">{fmtDateTime(a.createdAt)}</span></li>)}</ul>
       </section>
     </>
   );

@@ -6,11 +6,11 @@ import type { ReactNode } from "react";
 export function Mark({ className = "size-9" }: { className?: string }) {
   return (
     <svg aria-hidden viewBox="0 0 40 40" className={className} fill="none">
-      <rect width="40" height="40" rx="11" fill="var(--e-accent)" />
-      <path d="M8 26.5c4-2.2 8.6-2.2 12 .6 3.4-2.8 8-2.8 12-.6V31c-4-2.2-8.6-2.2-12 .6C16.6 28.8 12 28.8 8 31v-4.5Z" fill="#f6f0e1" />
-      <path d="M20 25V16" stroke="#f6f0e1" strokeWidth="2" strokeLinecap="round" />
-      <path d="M20 17c0-3.6-2.4-5.8-6.2-6 0 3.6 2.4 5.8 6.2 6Z" fill="#c9d6b4" />
-      <path d="M20 14.5c0-3 2-5 5.4-5.2 0 3-2 5-5.4 5.2Z" fill="#d4a03c" />
+      <rect width="40" height="40" rx="11" fill="var(--tint)" />
+      <path d="M8 26.5c4-2.2 8.6-2.2 12 .6 3.4-2.8 8-2.8 12-.6V31c-4-2.2-8.6-2.2-12 .6C16.6 28.8 12 28.8 8 31v-4.5Z" fill="#022c22" />
+      <path d="M20 25V16" stroke="#022c22" strokeWidth="2" strokeLinecap="round" />
+      <path d="M20 17c0-3.6-2.4-5.8-6.2-6 0 3.6 2.4 5.8 6.2 6Z" fill="#022c22" fillOpacity=".55" />
+      <path d="M20 14.5c0-3 2-5 5.4-5.2 0 3-2 5-5.4 5.2Z" fill="#022c22" fillOpacity=".8" />
     </svg>
   );
 }
@@ -40,18 +40,6 @@ export function SiteHeader() {
   );
 }
 
-/** Rolling hills: a soft landscape that grounds the hero and the closing call to action. */
-export function Hills({ className = "" }: { className?: string }) {
-  return (
-    <svg aria-hidden viewBox="0 0 1440 220" preserveAspectRatio="none" className={`block w-full ${className}`}>
-      <path d="M0 120C180 60 330 70 520 110s360 70 560 20c140-35 270-40 360 0V220H0Z" fill="var(--e-hill-1)" />
-      <path d="M0 150c160-50 310-40 470 0s330 60 520 20c170-36 330-30 450 10v40H0Z" fill="var(--e-hill-2)" />
-      <path d="M0 180c200-40 360-20 540 10s340 30 520-6c150-30 280-24 380 6v30H0Z" fill="var(--e-hill-3)" />
-      <path d="M0 205c220-24 420-14 640 4s420 10 800-8v19H0Z" fill="var(--e-hill-4)" />
-    </svg>
-  );
-}
-
 export function Leaf({ className = "size-5" }: { className?: string }) {
   return (
     <svg aria-hidden viewBox="0 0 24 24" className={className} fill="currentColor"><path d="M20 4C9 4 4 9.5 4 16c0 1.4.3 2.7.8 3.8C6 15.5 9.5 12 14 10c-3 3-5 6-6 10 .7.1 1.4.2 2 .2 6.5 0 10-6 10-16Z" /></svg>
@@ -63,7 +51,7 @@ export function Feature({ eyebrow, title, children, visual, flip }: { eyebrow: s
   return (
     <section className="mx-auto grid max-w-6xl items-center gap-8 px-4 py-12 sm:px-6 md:grid-cols-2 md:gap-14 md:py-16">
       <div className={flip ? "md:order-2" : ""}>
-        <p className="text-sm font-semibold text-(--e-clay)">{eyebrow}</p>
+        <p className="text-sm font-semibold text-(--forest)">{eyebrow}</p>
         <h3 className="mt-2 text-3xl font-semibold leading-[1.1] tracking-[-0.025em] sm:text-4xl">{title}</h3>
         <div className="mt-4 space-y-3 text-base leading-relaxed text-(--e-muted)">{children}</div>
       </div>
@@ -74,16 +62,16 @@ export function Feature({ eyebrow, title, children, visual, flip }: { eyebrow: s
 
 export function Check({ children }: { children: ReactNode }) {
   return (
-    <li className="flex gap-2.5"><Leaf className="mt-1 size-4 shrink-0 text-(--e-accent)" /><span>{children}</span></li>
+    <li className="flex gap-2.5"><Leaf className="mt-1 size-4 shrink-0 text-(--tint)" /><span>{children}</span></li>
   );
 }
 
 type Tone = "moss" | "ochre" | "clay" | "sand";
 const TONES: Record<Tone, string> = {
-  moss: "bg-[#c9d6b4] text-[#2f4d2a]",
-  ochre: "bg-[#f0d9a0] text-[#2a2619]",
-  clay: "bg-[#f3d9cc] text-[#8a4224]",
-  sand: "bg-(--e-alt) text-(--e-muted)",
+  moss: "bg-emerald-100 text-emerald-800 dark:bg-emerald-400/15 dark:text-emerald-200",
+  ochre: "bg-amber-100 text-amber-800 dark:bg-amber-400/15 dark:text-amber-200",
+  clay: "bg-red-100 text-red-800 dark:bg-red-400/15 dark:text-red-200",
+  sand: "bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-zinc-300",
 };
 export function Pill({ tone, children }: { tone: Tone; children: ReactNode }) {
   return <span className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-xs font-medium ${TONES[tone]}`}>{children}</span>;
@@ -92,7 +80,7 @@ export function Pill({ tone, children }: { tone: Tone; children: ReactNode }) {
 /** A small product caption that sits on a photo, so the picture still says what the product does. */
 export function Chip({ children, tone, label }: { children: ReactNode; tone?: Tone; label?: string }) {
   return (
-    <div className="flex max-w-full items-center gap-2.5 rounded-xl bg-(--e-surface)/95 px-3 py-2 text-sm text-(--e-text) shadow-lg shadow-black/15 backdrop-blur">
+    <div className="flex max-w-full items-center gap-2.5 rounded-xl bg-white/90 px-3 py-2 text-sm text-zinc-900 shadow-lg shadow-black/10 backdrop-blur dark:bg-zinc-900/90 dark:text-zinc-50">
       <span className="min-w-0">{children}</span>
       {tone && label && <Pill tone={tone}>{label}</Pill>}
     </div>
@@ -109,7 +97,7 @@ export function Photo({ src, alt, width, height, sizes, priority, shape = "round
 }) {
   return (
     <figure className={`relative mx-auto w-full max-w-md ${className}`}>
-      <div className={`overflow-hidden shadow-xl shadow-[#2f4d2a]/15 ring-1 ring-black/5 ${shape === "arch" ? "rounded-t-[999px] rounded-b-[2rem]" : "rounded-[2rem]"}`}>
+      <div className={`overflow-hidden shadow-xl shadow-black/10 ring-1 ring-black/5 ${shape === "arch" ? "rounded-t-[999px] rounded-b-[2rem]" : "rounded-[2rem]"}`}>
         <Image src={src} alt={alt} width={width} height={height} sizes={sizes} priority={priority} className="aspect-[10/11] h-auto w-full object-cover" />
       </div>
       {caption && <figcaption className="absolute inset-x-4 bottom-4 flex justify-start">{caption}</figcaption>}

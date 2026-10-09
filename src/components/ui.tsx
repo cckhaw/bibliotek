@@ -28,11 +28,11 @@ export function Stat({ label, value, sub, tone }: { label: string; value: ReactN
 
 export function Meter({ label, used, limit, disabled }: { label: string; used: number; limit: number; disabled?: boolean }) {
   const pct = limit > 0 ? Math.min(100, Math.round((used / limit) * 100)) : 100;
-  const tone = pct >= 100 ? "bg-red-500" : pct >= 85 ? "bg-amber-500" : "bg-emerald-500";
+  const tone = pct >= 100 ? "bg-red-500" : pct >= 85 ? "bg-amber-500" : "bg-(--tint)";
   return (
     <div className={disabled ? "opacity-50" : ""}>
       <div className="mb-1 flex justify-between text-sm"><span>{label}{disabled && " (not enforced)"}</span><span className="tabular-nums">{used.toLocaleString()} / {limit.toLocaleString()}</span></div>
-      <div className="h-2 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={label}>
+      <div className="h-2 overflow-hidden rounded-full bg-black/8 dark:bg-white/10" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={label}>
         {/* scaleX, not width: the bar animates on the compositor and springs to a new value from wherever it is. */}
         <div data-slide className={`h-full w-full origin-left ${tone}`} style={{ transform: `scaleX(${pct / 100})`, transitionProperty: "transform" }} />
       </div>

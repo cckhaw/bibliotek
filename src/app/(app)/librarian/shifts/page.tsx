@@ -22,7 +22,7 @@ export default async function MyShifts() {
             <section key={day} className="card">
               <h2 className="h2">{day}</h2>
               <ul className="space-y-2">{list.map((s) => (
-                <li key={s.id} className="flex flex-wrap justify-between gap-2 rounded-lg bg-slate-50 px-3 py-2 text-sm dark:bg-slate-800">
+                <li key={s.id} className="flex flex-wrap justify-between gap-2 rounded-lg bg-slate-50 px-3 py-2 text-sm dark:bg-zinc-800">
                   <span className="font-medium">{s.branch.name}</span>
                   <span>{s.startTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} – {s.endTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
                   {s.notes && <span className="muted w-full">{s.notes}</span>}

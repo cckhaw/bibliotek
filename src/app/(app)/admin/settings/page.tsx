@@ -28,7 +28,7 @@ export default async function Settings() {
 
       <section className="card">
         <h2 className="h2">Branches</h2>
-        <ul className="mb-4 divide-y divide-slate-100 text-sm dark:divide-slate-800">
+        <ul className="mb-4 divide-y divide-slate-100 text-sm dark:divide-zinc-800">
           {branches.map((b) => <li key={b.id} className="flex justify-between gap-2 py-2"><span><b className="font-medium">{b.name}</b> <Badge tone="gray">{b.code}</Badge>{b.address && <span className="muted"> · {b.address}</span>}</span><span className="muted">{b._count.homeCopies} home copies</span></li>)}
         </ul>
         <ApiForm action="/api/branches" submit="Add branch" fields={[
@@ -40,7 +40,7 @@ export default async function Settings() {
 
       <section className="card">
         <h2 className="h2">Library staff</h2>
-        <ul className="mb-4 divide-y divide-slate-100 text-sm dark:divide-slate-800">
+        <ul className="mb-4 divide-y divide-slate-100 text-sm dark:divide-zinc-800">
           {staff.map((s) => <li key={s.id} className="flex flex-wrap justify-between gap-2 py-2"><span><b className="font-medium">{s.fullName}</b> <span className="muted break-all">{s.email}</span></span><span><Badge tone={s.role === "TENANT_ADMIN" ? "amber" : "gray"}>{s.role.replace("_", " ").toLowerCase()}</Badge> <span className="muted">since {fmtDate(s.createdAt)}</span></span></li>)}
         </ul>
         <ApiForm action="/api/staff" submit="Send invitation" fields={[

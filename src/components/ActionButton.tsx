@@ -39,7 +39,7 @@ export function ActionButton({
     <span className="inline-flex flex-col items-start gap-1">
       <button onClick={go} disabled={busy} className={`btn-${variant} btn-sm`}>{busy ? "…" : label}</button>
       {err && <span className="max-w-md text-xs text-red-600 dark:text-red-400" role="alert">{err}</span>}
-      {ok && <span className="max-w-md text-xs text-emerald-700 dark:text-emerald-400" role="status">{ok}</span>}
+      {ok && <span className="max-w-md text-xs text-(--forest)" role="status">{ok}</span>}
     </span>
   );
 }

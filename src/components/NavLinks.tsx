@@ -41,7 +41,7 @@ export function NavLinks({ items, className = "" }: { items: { href: string; lab
     <nav ref={root} aria-label="Primary" className={`relative ${className}`}>
       {box && (
         <span aria-hidden data-slide
-          className="pointer-events-none absolute left-0 top-0 rounded-xl bg-[color-mix(in_srgb,var(--e-accent)_14%,transparent)]"
+          className="pointer-events-none absolute left-0 top-0 rounded-xl bg-[color-mix(in_srgb,var(--tint)_16%,transparent)]"
           style={{ width: box.w, height: box.h, transform: `translate(${box.x}px, ${box.y}px)`, transitionProperty: armed ? "transform, width" : "none" }} />
       )}
       {items.map((i) => (

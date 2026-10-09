@@ -4,7 +4,7 @@ import { getCurrentUserOrNull } from "@/lib/auth/session";
 import { HOME } from "@/lib/auth/rbac";
 import { TIER_PRESETS } from "@/lib/services/licensing";
 import Image from "next/image";
-import { Check, Chip, Feature, Hills, Leaf, Photo, Pill, SiteFooter, SiteHeader } from "@/components/marketing";
+import { Check, Chip, Feature, Leaf, Photo, Pill, SiteFooter, SiteHeader } from "@/components/marketing";
 import { FindLibrary } from "@/components/FindLibrary";
 
 export const metadata = { title: "Bibliotek — Library management for schools & universities" };
@@ -18,7 +18,7 @@ const ICONS: Record<string, string[]> = {
 
 function RoleIcon({ name }: { name: keyof typeof ICONS }) {
   return (
-    <span className="grid size-11 place-items-center rounded-xl bg-(--e-sage) text-(--e-accent)">
+    <span className="grid size-11 place-items-center rounded-xl bg-(--e-sage) text-(--forest)">
       <svg aria-hidden viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
         {ICONS[name].map((d) => <path key={d} d={d} />)}
       </svg>
@@ -56,11 +56,11 @@ export default async function Landing() {
       <SiteHeader />
       <main id="main">
         {/* Hero */}
-        <section className="relative overflow-hidden bg-gradient-to-b from-(--e-sage) to-(--e-bg)">
+        <section className="relative overflow-hidden">
           <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-4 pb-16 pt-12 sm:px-6 md:grid-cols-2 md:gap-14 md:pb-24 md:pt-20">
             <div>
               <h1 className="text-5xl font-semibold leading-[1.05] tracking-[-0.03em] sm:text-6xl">
-                A library that <span className="text-(--e-accent)">grows</span> with every campus.
+                A library that <span className="text-(--forest)">grows</span> with every campus.
               </h1>
               <p className="mt-5 max-w-xl text-lg leading-relaxed text-(--e-muted)">
                 Catalogue books, check them out with a barcode scan, and let students return them at any branch. Fines, reminders and duty rosters tend themselves.
@@ -75,16 +75,15 @@ export default async function Landing() {
               alt="A long aisle of tall wooden bookshelves lit by warm hanging lamps"
               caption={<Chip tone="ochre" label="Cross-branch"><b className="font-semibold">“Clean Code”</b> returned at Science Library</Chip>} />
           </div>
-          <Hills className="relative -mb-px h-16 sm:h-24 md:h-32" />
         </section>
 
         {/* Values: the forest floor */}
-        <section aria-label="Highlights" className="bg-(--e-hill-4) text-(--e-deep-text)">
+        <section aria-label="Highlights" className="bg-(--e-alt) text-(--e-text)">
           <ul className="mx-auto grid max-w-6xl gap-6 px-4 py-8 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
             {VALUES.map(([t, d]) => (
               <li key={t} className="flex gap-3">
-                <Leaf className="mt-1 size-5 shrink-0 text-(--e-ochre)" />
-                <div><p className="text-lg font-semibold tracking-[-0.01em]">{t}</p><p className="text-sm text-(--e-deep-muted)">{d}</p></div>
+                <Leaf className="mt-1 size-5 shrink-0 text-(--tint)" />
+                <div><p className="text-lg font-semibold tracking-[-0.01em]">{t}</p><p className="text-sm text-(--e-muted)">{d}</p></div>
               </li>
             ))}
           </ul>
@@ -127,7 +126,7 @@ export default async function Landing() {
                 <RoleIcon name={r.icon} />
                 <h3 className="mt-4 text-xl font-semibold tracking-[-0.015em]">{r.title}</h3>
                 <p className="mt-1 flex-1 text-sm leading-relaxed text-(--e-muted)">{r.text}</p>
-                <Link href={r.cta.href} className="mt-4 text-sm font-semibold text-(--e-clay) hover:underline">{r.cta.label} →</Link>
+                <Link href={r.cta.href} className="mt-4 text-sm font-semibold text-(--tint-text) hover:underline">{r.cta.label} →</Link>
               </div>
             ))}
           </div>
@@ -141,7 +140,7 @@ export default async function Landing() {
               {PLANS.map((p) => {
                 const featured = "featured" in p && p.featured;
                 return (
-                  <div key={p.key} className={`card flex flex-col sm:p-6 ${featured ? "ring-2 ring-(--e-accent)" : ""}`}>
+                  <div key={p.key} className={`card flex flex-col sm:p-6 ${featured ? "ring-2 ring-(--tint-text)" : ""}`}>
                     {featured && <span className="mb-2 w-fit"><Pill tone="ochre">Suggested for schools</Pill></span>}
                     <h3 className="text-2xl font-semibold tracking-[-0.02em]">{p.name}</h3><p className="text-sm text-(--e-muted)">{p.blurb}</p>
                     <p className="mt-5 text-3xl font-semibold tracking-[-0.022em] tabular-nums">{TIER_PRESETS[p.key].maxStudents.toLocaleString()}<span className="ml-1.5 font-sans text-sm font-normal text-(--e-muted)">students</span></p>

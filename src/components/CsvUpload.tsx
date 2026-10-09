@@ -70,7 +70,7 @@ export function CsvUpload({ endpoint, title, templateHref, columns }: { endpoint
                   <tbody>{result.errors.map((e, i) => <tr key={i}><td>{e.line}</td><td>{e.field ?? "—"}</td><td>{e.message}</td></tr>)}</tbody></table>
               </div>
             </>
-          ) : <p className="text-sm text-emerald-700 dark:text-emerald-400">No problems found.</p>}
+          ) : <p className="text-sm text-(--forest)">No problems found.</p>}
         </div>
       )}
     </section>

@@ -94,7 +94,7 @@ export function ApiForm({
       ))}
       <div className="sm:col-span-2 flex flex-wrap items-center gap-3">
         <button className="btn-primary w-full sm:w-auto" disabled={busy}>{busy ? "Working…" : submit}</button>
-        {msg && <p role="status" className={`text-sm ${msg.ok ? "text-emerald-700 dark:text-emerald-400" : "text-red-700 dark:text-red-400"}`}>{msg.text}</p>}
+        {msg && <p role="status" className={`text-sm ${msg.ok ? "text-(--forest)" : "text-red-700 dark:text-red-400"}`}>{msg.text}</p>}
       </div>
     </form>
   );
