@@ -32,7 +32,7 @@ export default function ErrorPage({ error, reset }: { error: Error & { digest?: 
         <Link href="/login" className="btn-ghost">Go to sign in</Link>
       </div>
       {problems && problems.length > 0 && (
-        <p className="muted rounded-lg bg-slate-100 p-3 text-left text-xs dark:bg-slate-800" role="note">
+        <p className="muted rounded-lg bg-slate-100 p-3 text-left text-xs dark:bg-zinc-800" role="note">
           <b>System check</b> (give this to your administrator):<br />{problems.map((p) => <span key={p} className="block font-mono">{p}</span>)}
         </p>
       )}

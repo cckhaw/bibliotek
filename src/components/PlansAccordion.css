@@ -1,0 +1,105 @@
+/*
+ * Plans accordion: one plan is open, the others fold to their essentials (≥1024px). Below that there is no room to fold,
+ * so the plans stack and everything stays visible: the !important rules in the last media query beat the inline styles
+ * the animation keeps writing, so nothing has to be torn down when the window crosses the breakpoint.
+ */
+.plans-accordion {
+  --pa-gap: 12px;
+  display: flex;
+  gap: var(--pa-gap);
+  width: 100%;
+  min-height: 20rem;
+  perspective: 1400px;
+  perspective-origin: 50% 50%;
+}
+
+.pa-panel {
+  position: relative;
+  display: flex;
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+  padding: 1.25rem;
+  border: 1px solid var(--e-rule);
+  border-radius: 0.5rem;
+  background: var(--e-surface);
+  outline: none;
+  cursor: pointer;
+  transform-style: preserve-3d;
+  transform-origin: center center;
+  will-change: flex-grow, transform;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color 200ms ease-out,
+    border-color 200ms ease-out,
+    box-shadow 200ms ease-out;
+}
+
+/* Each plan has its own hue: a 2px bar across the top, and the open plan's edge picks it up. */
+.pa-panel::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 2px;
+  background: var(--hue);
+}
+
+.pa-panel[aria-current="true"] {
+  background: var(--e-alt);
+  border-color: color-mix(in srgb, var(--hue) 60%, var(--e-rule));
+}
+
+.pa-panel:focus-visible {
+  box-shadow: 0 0 0 2px var(--e-focus);
+}
+
+/* The left column keeps a fixed width, so text never reflows while the panel resizes; the panel simply reveals more. */
+.pa-main {
+  flex: none;
+  width: 11.5rem;
+}
+
+.pa-more {
+  flex: none;
+  width: 15rem;
+  margin-left: 1.5rem;
+  padding-top: 0.25rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pa-panel {
+    will-change: auto;
+  }
+}
+
+@media (max-width: 1023.98px) {
+  .plans-accordion {
+    flex-direction: column;
+    min-height: 0;
+    perspective: none;
+  }
+
+  .pa-panel {
+    flex-direction: column;
+    flex: none !important;
+    cursor: default;
+    transform: none !important;
+  }
+
+  .pa-main,
+  .pa-more {
+    width: 100%;
+  }
+
+  .pa-more {
+    margin-top: 1.25rem;
+    margin-left: 0;
+    padding-top: 0;
+  }
+
+  .pa-feature {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

@@ -55,7 +55,7 @@ export default async function Roster({ searchParams }: { searchParams: Promise<{
               <h2 className="mb-2 text-sm font-semibold">{day.toLocaleDateString(undefined, { weekday: "short", day: "numeric", timeZone: "UTC" })}</h2>
               {list.length === 0 ? <p className="muted">—</p> : (
                 <ul className="space-y-2">{list.map((s) => (
-                  <li key={s.id} className="rounded-lg bg-slate-50 p-2 text-xs dark:bg-slate-800">
+                  <li key={s.id} className="rounded-lg bg-slate-50 p-2 text-xs dark:bg-zinc-800">
                     <p className="font-medium">{s.librarian.fullName}</p>
                     <p>{s.startTime.toISOString().slice(11, 16)}–{s.endTime.toISOString().slice(11, 16)} UTC</p>
                     <p className="muted">{s.branch.name}</p>

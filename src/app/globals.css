@@ -1,108 +1,212 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  /* Geist (self-hosted via the `geist` package, wired in layout.tsx) with the platform stack as the fallback. */
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: var(--font-sans);
 
-  /*
-   * Earth & nature palette, applied app-wide by RE-DEFINING the scales the code already uses, so every page, button,
-   * badge and form follows it without per-page edits (and new pages inherit it automatically).
-   *   slate   -> warm sand / bark neutrals in light mode, deep forest in dark mode
-   *   emerald -> moss        (success, positive)
-   *   amber   -> ochre       (warnings)
-   *   red     -> brick/clay  (errors, destructive)
-   *   brand   -> moss green  (primary actions, active nav, focus)
-   */
-  --color-slate-50: #f7f2e7;  --color-slate-100: #efe7d6; --color-slate-200: #e3d8c0; --color-slate-300: #cdbf9f;
-  --color-slate-400: #a69c82; --color-slate-500: #6a604a; --color-slate-600: #4f4838; --color-slate-700: #3f4a35;
-  --color-slate-800: #2a3a2b; --color-slate-900: #1c2b1f; --color-slate-950: #141f16;
-
-  --color-emerald-50: #f0f4e8; --color-emerald-100: #e2e9d6; --color-emerald-200: #c9d6b4; --color-emerald-300: #a9be93;
-  --color-emerald-400: #86a56f; --color-emerald-500: #5f8a4e; --color-emerald-600: #4d7a3f; --color-emerald-700: #3e6434;
-  --color-emerald-800: #2f4d2a; --color-emerald-900: #1f3322; --color-emerald-950: #142015;
-
-  --color-amber-50: #fbf4e0; --color-amber-100: #f6e7c2; --color-amber-200: #efd59a; --color-amber-300: #e4bd68;
-  --color-amber-400: #d4a03c; --color-amber-500: #c18a2a; --color-amber-600: #a0701f; --color-amber-700: #835a1a;
-  --color-amber-800: #6a4a18; --color-amber-900: #553d17; --color-amber-950: #3a290f;
-
-  --color-red-50: #fbefe9; --color-red-100: #f3d9cc; --color-red-200: #e9bba6; --color-red-300: #efb59a;
-  --color-red-400: #e6a07c; --color-red-500: #b4553a; --color-red-600: #a4402a; --color-red-700: #8a3322;
-  --color-red-800: #6e2a1c; --color-red-900: #5a2418; --color-red-950: #3a150e;
-
-  --color-brand-50: #e2e9d6; --color-brand-100: #c9d6b4; --color-brand-600: #3e6434; --color-brand-700: #2f4d2a; --color-brand-900: #1f3322;
-  /* Link text is separate from brand-600: a button background (needs white text on it) and link text (needs to be light
-     on dark backgrounds) require opposite lightness in dark mode. */
-  --color-brand-link: #3e6434;
+  /* Tailwind's own slate / zinc / emerald / amber / red scales are used as shipped. Only the brand utilities below are
+     custom, and they follow the light/dark tint tokens in :root so one class works in both appearances. */
+  --color-brand-600: var(--tint);
+  --color-brand-link: var(--tint-text);
 }
 
-/* Semantic tokens, available everywhere. They follow the OS light/dark setting. */
+/*
+ * COLOR SYSTEM: a neutral canvas with one green tint.
+ *
+ *  1. Canvas is neutral: slate-50 in light, zinc-950 in dark. Large areas are never green.
+ *  2. --tint is a softened system green (#42B860 light, #40BF60 dark: Apple's #34C759 / #30D158 with 12-14 points less
+ *     HSL saturation), reserved for what is interactive or active: primary buttons, the active nav item, toggles/checkboxes, progress, focus. It is a FILL colour.
+ *  3. Containers are translucent neutral fills with a hairline border.
+ *  4. Green text is deep forest (emerald-800 / emerald-200), never neon.
+ *
+ * Contrast notes (WCAG): the light tint on white is only 2.5:1, so it never carries text or a lone edge in light mode.
+ * Text on a tint fill is near-black (--on-tint, 7.8:1 light / 8.4:1 dark), and light-mode link text / focus rings use
+ * --tint-text (6.0:1). In dark mode the tint is 8.4:1 on the canvas, so it is used directly for links and focus.
+ */
 :root {
-  --e-bg: #f7f2e7;       /* sand: page background */
-  --e-alt: #efe7d6;      /* deeper sand: alternate sections, hover */
-  --e-sage: #e2e9d6;     /* pale sage: soft panels */
-  --e-surface: #fffdf8;  /* cards and inputs */
-  --e-text: #2a2619;     /* bark */
-  --e-muted: #6a604a;
-  --e-border: #e3d8c0;
-  --e-accent: #3e6434;   /* moss: icons, links */
-  --e-clay: #8a4224;     /* terracotta: secondary links, eyebrows */
-  --e-hill-1: #c9d6b4; --e-hill-2: #9db98a; --e-hill-3: #5f8a4e; --e-hill-4: #2f4d2a;
-  --e-ochre: #d4a03c;
-  --e-input-border: #8d8467; /* form field outline: 3.3:1+ against sand and white, so people can see where to type (WCAG 1.4.11) */
-  --e-focus: #3e6434;    /* focus ring: 6:1 on sand */
-  --e-deep: #1f3322;     /* forest panels */
-  --e-deep-text: #f6f0e1;
-  --e-deep-muted: #c9d6b4;
+  --tint: #42b860;
+  --tint-text: #29703b;
+  --on-tint: #09090b;
+  --forest: #065f46;               /* emerald-800: green labels and statuses */
+
+  --e-bg: #f8fafc;                 /* slate-50: canvas */
+  --e-alt: #f1f5f9;                /* slate-100: alternate sections, hover */
+  --e-sage: #e9efea;               /* desaturated sage: soft icon wells only */
+  --e-surface: rgb(241 245 249 / 0.5);  /* slate-100/50: cards and menus */
+  --e-field: #ffffff;              /* inputs stay opaque so they read as places to type */
+  --e-text: #18181b;               /* zinc-900 */
+  --e-muted: #52525b;              /* zinc-600: 7.4:1 on the canvas */
+  --e-border: rgb(229 229 229 / 0.5);   /* neutral-200/50: soft edge of translucent containers */
+  --e-rule: #e4e4e7;               /* zinc-200: solid structural lines (section rules, ruled grids, panel frames) */
+
+  /* A small supporting palette so the page is not all neutral. Used for icon tiles, labels and per-item accents only,
+     never for large fills, and never beside the primary green on the same control. Each hue has a fill (graphics, >=3:1
+     against its own tint) and a text variant (>=4.5:1 on the canvas). */
+  --c-blue: #2563eb;   --c-blue-text: #1d4ed8;
+  --c-violet: #7c3aed; --c-violet-text: #6d28d9;
+  --c-orange: #dc510a; --c-orange-text: #c2410c;
+  --c-teal: #0d9488;   --c-teal-text: #0f766e;
+  --e-accent: var(--tint-text);    /* green icons/links that sit on the canvas */
+  --e-input-border: #8e8e93;       /* 3.1:1+ on white and the canvas (WCAG 1.4.11) */
+  --e-focus: var(--tint-text);
+
+  /* Materials: translucent chrome that content scrolls under. The bright top edge is the light catching the glass. */
+  --mat-bg: rgb(248 250 252 / 0.72);
+  --mat-edge: rgb(255 255 255 / 0.6);
+  --hairline: rgb(0 0 0 / 0.08);
+  --lift: 0 1px 2px rgb(0 0 0 / 0.04);
+  accent-color: var(--tint);
+
+  /*
+   * Springs as CSS easings. Critically damped (damping 1.0, no overshoot) so the default never bounces; they settle
+   * rather than run for a fixed duration, so a transition retargeted mid-flight continues from its live value.
+   *   --spring       response 0.3s  (controls, indicators)    settles in ~450ms
+   *   --spring-move  response 0.4s  (reposition, page enter)  settles in ~600ms
+   */
+  --spring: linear(0, 0.1183, 0.3294, 0.5273, 0.6819, 0.7925, 0.8677, 0.9171, 0.9487, 0.9686, 0.9809, 0.9885, 0.9931, 0.9959, 0.9976, 0.9986, 1);
+  --spring-move: linear(0, 0.0974, 0.2816, 0.4656, 0.6189, 0.7361, 0.821, 0.8806, 0.9213, 0.9487, 0.9668, 0.9787, 0.9864, 0.9914, 0.9945, 0.9966, 0.9978, 0.9987, 1);
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-brand-600: #4d7a3f; --color-brand-link: #9fc486;
-    --e-bg: #141f16; --e-alt: #1a281c; --e-sage: #1f3322; --e-surface: #1f3322;
-    --e-text: #f6f0e1; --e-muted: #c9d6b4; --e-border: #2e4631;
-    --e-accent: #9fc486; --e-clay: #e6a07c;
-    --e-hill-1: #1f3322; --e-hill-2: #2b4a2f; --e-hill-3: #3a6137; --e-hill-4: #141f16;
-    --e-focus: #d4a03c; --e-input-border: #6b8d6a;
-    --e-deep: #0f1a11;
+    --tint: #40bf60;
+    --tint-text: #40bf60;
+    --forest: #a7f3d0;             /* emerald-200 */
+
+    --e-bg: #09090b;               /* zinc-950: canvas */
+    --e-alt: #18181b;              /* zinc-900 */
+    --e-sage: #16211a;
+    --e-surface: rgb(24 24 27 / 0.5);     /* zinc-900/50 */
+    --e-field: #18181b;
+    --e-text: #fafafa;
+    --e-muted: #a1a1aa;            /* zinc-400: 7.8:1 */
+    --e-border: rgb(255 255 255 / 0.1);
+    --e-rule: #27272a;             /* zinc-800 */
+    --c-blue: #60a5fa;   --c-blue-text: #60a5fa;
+    --c-violet: #a78bfa; --c-violet-text: #a78bfa;
+    --c-orange: #fb923c; --c-orange-text: #fb923c;
+    --c-teal: #2dd4bf;   --c-teal-text: #2dd4bf;
+    --e-input-border: #6e6e73;
+
+    --mat-bg: rgb(9 9 11 / 0.72); --mat-edge: rgb(255 255 255 / 0.07); --hairline: rgb(255 255 255 / 0.1);
+    --lift: none;
   }
 }
 
 /* Shared building blocks that variants @apply must be utilities in Tailwind v4 (not @layer components). */
 @utility btn {
-  @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+  /* Press is instant (100ms); release springs back. Touch devices get the 44pt minimum target. */
+  @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50 aria-disabled:cursor-not-allowed aria-disabled:opacity-50;
+  transition: transform var(--spring-dur, 450ms) var(--spring), background-color 150ms ease-out, opacity 150ms ease-out;
+  &:active:not(:disabled):not([aria-disabled="true"]) { transform: scale(0.97); transition-duration: 100ms, 100ms, 100ms; transition-timing-function: ease-out; }
+  @media (pointer: coarse) { min-height: 2.75rem; }
 }
 @utility badge {
   @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium;
 }
 
 @layer base {
-  :root { color-scheme: light dark; }
-  body { background: var(--e-bg); color: var(--e-text); @apply antialiased; }
+  :root { color-scheme: light dark; --spring-dur: 450ms; }
+  html { scroll-padding-top: 5rem; }
+  body { background: var(--e-bg); color: var(--e-text); font-optical-sizing: auto; @apply antialiased; }
   :focus-visible { outline-color: var(--e-focus); }
-  ::selection { background: #c9d6b4; color: #1f3322; }
+  ::selection { background: color-mix(in srgb, var(--tint) 32%, transparent); }
   /* 16px minimum prevents iOS zoom-on-focus */
   input, select, textarea { font-size: 16px; }
+  @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
 }
 
 @layer components {
-  .card { @apply rounded-xl border border-(--e-border) bg-(--e-surface) p-4 shadow-sm shadow-[#2f4d2a]/5 sm:p-5; }
-  .btn-primary { @apply btn bg-brand-600 text-white hover:bg-brand-700; }
-  .btn-ghost { @apply btn border border-slate-300 bg-transparent hover:bg-(--e-alt) dark:border-(--e-border); }
+  /* Surfaces: grouped by depth and a hairline ring rather than a hard border. */
+  .card { @apply rounded-2xl border border-(--e-border) bg-(--e-surface) p-5 sm:p-6; box-shadow: var(--lift); }
+  .btn-primary { @apply btn bg-(--tint) text-(--on-tint) hover:brightness-95; }
+  .btn-ghost { @apply btn bg-black/5 hover:bg-black/8 dark:bg-white/8 dark:hover:bg-white/12; }
+  /* Secondary action: a crisp 1px outline, never a fill, so the one green button stays the single primary. */
+  .btn-outline { @apply btn border border-(--e-input-border) bg-transparent text-(--e-text) hover:bg-(--e-alt); }
   .btn-danger { @apply btn bg-red-600 text-white hover:bg-red-700; }
-  .btn-sm { @apply min-h-8 px-3 py-1 text-xs; }
-  .label { @apply mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300; }
-  .input { @apply block w-full rounded-lg border border-(--e-input-border) bg-(--e-surface) px-3 py-2 text-(--e-text) shadow-sm placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/30 dark:bg-slate-950; }
-  .badge-green { @apply badge bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300; }
-  .badge-amber { @apply badge bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300; }
-  .badge-red { @apply badge bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300; }
-  .badge-gray { @apply badge bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300; }
-  .table-wrap { @apply -mx-4 overflow-x-auto sm:mx-0; }
+  .btn-sm { @apply min-h-8 rounded-lg px-3 py-1 text-xs; }
+  .label { @apply mb-1.5 block text-sm font-medium text-(--e-text); }
+  .input { @apply block w-full rounded-xl border border-(--e-input-border) bg-(--e-field) px-3.5 py-2.5 text-(--e-text) placeholder:text-(--e-muted) focus:border-(--tint-text) focus:outline-none focus:ring-4 focus:ring-[color-mix(in_srgb,var(--tint)_28%,transparent)]; transition: box-shadow 150ms ease-out, border-color 150ms ease-out; }
+  .badge-green { @apply badge bg-emerald-100 text-emerald-800 dark:bg-emerald-400/10 dark:text-emerald-200; }
+  .badge-amber { @apply badge bg-amber-100 text-amber-800 dark:bg-amber-400/10 dark:text-amber-200; }
+  .badge-red { @apply badge bg-red-100 text-red-800 dark:bg-red-400/10 dark:text-red-200; }
+  .badge-gray { @apply badge bg-slate-100 text-slate-700 dark:bg-white/10 dark:text-zinc-300; }
+  .table-wrap { @apply -mx-5 overflow-x-auto sm:-mx-6; }
   .table { @apply w-full min-w-[32rem] text-left text-sm; }
-  .table th { @apply whitespace-nowrap border-b border-(--e-border) px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400; }
-  .table td { @apply border-b border-slate-100 px-3 py-2.5 align-top dark:border-(--e-border)/60; }
-  .h1 { @apply font-display text-2xl font-semibold tracking-tight sm:text-3xl; }
-  .h2 { @apply mb-3 font-display text-lg font-semibold sm:text-xl; }
-  .muted { @apply text-sm text-slate-500 dark:text-slate-400; }
+  /* Sentence-case column labels: quieter than uppercase, and no tracking bump needed at this size. */
+  .table th { @apply whitespace-nowrap px-5 py-2 text-xs font-medium text-(--e-muted) sm:px-6; box-shadow: inset 0 -1px 0 var(--hairline); }
+  .table td { @apply px-5 py-3 align-top sm:px-6; box-shadow: inset 0 -1px 0 var(--hairline); }
+  .table tbody tr:last-child td { box-shadow: none; }
+
+  /* Type: tracking tightens as size grows, leading shrinks as size grows (display tight, body open). */
+  .h1 { @apply text-[1.75rem] leading-[1.1] font-semibold tracking-[-0.022em] sm:text-[2.125rem]; }
+  .h2 { @apply mb-4 text-lg leading-snug font-semibold tracking-[-0.01em] sm:text-xl; }
+  .muted { @apply text-sm text-(--e-muted); }
+
+  /* Material: translucent chrome. Never stack one material on another. */
+  .material { background: var(--mat-bg); box-shadow: inset 0 1px 0 var(--mat-edge); -webkit-backdrop-filter: blur(24px) saturate(180%); backdrop-filter: blur(24px) saturate(180%); }
+  /* Scroll edge effect: content fades under floating chrome instead of meeting a 1px divider. */
+  .edge-fade::after { content: ""; position: absolute; inset-inline: 0; top: 100%; height: 1.25rem; pointer-events: none; background: linear-gradient(to bottom, var(--mat-bg), transparent); }
+  @media (min-width: 48rem) { .edge-fade::after { display: none; } }
+
+  /* Hue scopes: set --hue / --hue-text for everything inside. */
+  .hue-blue { --hue: var(--c-blue); --hue-text: var(--c-blue-text); }
+  .hue-violet { --hue: var(--c-violet); --hue-text: var(--c-violet-text); }
+  .hue-orange { --hue: var(--c-orange); --hue-text: var(--c-orange-text); }
+  .hue-teal { --hue: var(--c-teal); --hue-text: var(--c-teal-text); }
+  /* Icon tile (the Settings-app squircle): a 14% tint of the hue behind a glyph in the hue. Size it with size-*. */
+  .tile { @apply grid shrink-0 place-items-center rounded-[0.625rem]; background: color-mix(in srgb, var(--hue) 14%, transparent); color: var(--hue); }
+  /* Stat tiles pick up a hue by position, so dashboards get colour without every page choosing one. */
+  .stat { --hue: var(--e-muted); }
+  .stat:nth-child(4n+1) { --hue: var(--c-blue); }
+  .stat:nth-child(4n+2) { --hue: var(--c-orange); }
+  .stat:nth-child(4n+3) { --hue: var(--c-teal); }
+  .stat:nth-child(4n+4) { --hue: var(--c-violet); }
+
+  /* Segmented control: the thumb is one element that springs between segments. */
+  .segmented { @apply relative grid auto-cols-fr grid-flow-col gap-0 rounded-xl bg-black/5 p-1 dark:bg-white/8; }
+  .segmented-thumb { @apply absolute inset-y-1 left-1 rounded-lg bg-white dark:bg-white/15; width: calc((100% - 0.5rem) / var(--n, 2)); transform: translateX(calc(var(--i, 0) * 100%)); box-shadow: 0 1px 3px rgb(0 0 0 / 0.14), 0 0 0 0.5px rgb(0 0 0 / 0.06); transition: transform var(--spring-move-dur, 600ms) var(--spring-move); }
+  .segment { @apply relative z-10 min-h-9 rounded-lg px-3 text-sm font-medium text-(--e-muted) transition-colors duration-150; }
+  .segment[aria-selected="true"] { @apply text-(--e-text); }
+
+  /* Enter motion. Content arrives from where the list begins (new log rows from the top, pages from just below). */
+  .page-enter { animation: rise 600ms var(--spring-move) backwards; }
+  .row-enter { animation: drop 450ms var(--spring) backwards; }
+  /* Staggered entrance: set --i (0, 1, 2...) on each child. */
+  .stagger-in { animation: rise 600ms var(--spring-move) backwards; animation-delay: calc(var(--i, 0) * 70ms); }
+  /* Chrome that grows a hairline only once content scrolls under it (where scroll-driven animation is supported). */
+  .scroll-line::after { content: ""; position: absolute; inset-inline: 0; bottom: 0; height: 1px; background: var(--e-rule); }
+  @supports (animation-timeline: scroll()) {
+    .scroll-line::after { opacity: 0; animation: fade-in linear both; animation-timeline: scroll(root); animation-range: 0 64px; }
+  }
+  /* Content settles into place as it scrolls into view, driven by scroll position (no JS, no observers). */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .reveal { animation: rise linear both; animation-timeline: view(); animation-range: entry 0% entry 40%; }
+    }
+  }
+  [data-slide] { transition-timing-function: var(--spring); transition-duration: 450ms; }
 }
 
-/* The home page wraps itself in .theme-earth; the page background and text now come from the global tokens. */
-.theme-earth { background: var(--e-bg); color: var(--e-text); }
+@keyframes rise { from { opacity: 0; transform: translateY(6px); } }
+@keyframes drop { from { opacity: 0; transform: translateY(-6px) scale(0.98); } }
+@keyframes fade { from { opacity: 0; } }
+@keyframes fade-in { to { opacity: 1; } }
+
+/* Reduced motion keeps the feedback and drops the movement: short cross-fades, no slides, no scale. */
+@media (prefers-reduced-motion: reduce) {
+  .page-enter, .row-enter, .stagger-in { animation: fade 200ms ease backwards; animation-delay: 0s; }
+  .btn:active:not(:disabled) { transform: none; }
+  .segmented-thumb, [data-slide] { transition-property: opacity, background-color; transition-duration: 0.01ms; }
+}
+/* Reduced transparency: frosted becomes solid. */
+@media (prefers-reduced-transparency: reduce) {
+  .material { background: var(--e-bg); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .edge-fade::after { display: none; }
+}
+/* Increased contrast: defined edges instead of soft shadows. */
+@media (prefers-contrast: more) {
+  .material { background: var(--e-bg); -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: 0 1px 0 var(--e-text); }
+  .card { box-shadow: 0 0 0 1px var(--e-text); }
+  .btn-ghost { box-shadow: inset 0 0 0 1px var(--e-text); }
+}

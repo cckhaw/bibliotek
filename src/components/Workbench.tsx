@@ -45,11 +45,12 @@ export function Workbench({ branches, defaultBranchId }: { branches: Branch[]; d
 
   return (
     <div className="grid gap-4 lg:grid-cols-5">
-      <form onSubmit={submit} className="card space-y-4 lg:col-span-2">
-        <div role="tablist" className="grid grid-cols-2 gap-1 rounded-lg bg-slate-100 p-1 dark:bg-slate-800">
+      <form onSubmit={submit} className="card space-y-5 lg:col-span-2">
+        <div role="tablist" aria-label="Desk mode" className="segmented" style={{ "--n": 2, "--i": mode === "checkout" ? 0 : 1 } as React.CSSProperties}>
+          <span aria-hidden className="segmented-thumb" />
           {(["checkout", "return"] as const).map((m) => (
             <button type="button" role="tab" aria-selected={mode === m} key={m} onClick={() => { setMode(m); setTimeout(() => barcode.current?.focus(), 0); }}
-              className={`rounded-md py-2 text-sm font-medium capitalize ${mode === m ? "bg-(--e-surface) shadow-sm dark:bg-slate-950" : "text-slate-500 dark:text-slate-300"}`}>{m}</button>
+              className="segment capitalize">{m}</button>
           ))}
         </div>
         <div>
@@ -77,8 +78,8 @@ export function Workbench({ branches, defaultBranchId }: { branches: Branch[]; d
         {log.length === 0 ? <p className="muted">Transactions you process will appear here.</p> : (
           <ul className="space-y-2">
             {log.map((l) => (
-              <li key={l.id} className={`rounded-lg border px-3 py-2 text-sm ${!l.ok ? "border-red-200 bg-red-50 text-red-900 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200" : l.warn ? "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200" : "border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200"}`}>
-                <span className="mr-2 text-xs font-semibold uppercase">{l.kind}</span>{l.text}
+              <li key={l.id} className={`row-enter rounded-xl border px-3.5 py-2.5 text-sm ${!l.ok ? "border-red-200 bg-red-50 text-red-900 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200" : l.warn ? "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200" : "border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200"}`}>
+                <span className="mr-2 text-xs font-semibold capitalize">{l.kind}</span>{l.text}
               </li>
             ))}
           </ul>

@@ -11,7 +11,6 @@ The files in `public/photos/` are cropped, resized and compressed (WebP) version
 | `card-catalogue.webp` | Catalogue & imports section | cottonbro studio | [An Organized Brown Wooden Drawers](https://www.pexels.com/photo/an-organized-brown-wooden-drawers-6333856/) |
 | `book-stack.webp` | Fines & reminders section | Yelena (as credited on Pexels) | [Books on the Table and Bookshelf](https://www.pexels.com/photo/books-on-the-table-and-bookshelf-10556717/) |
 | `reading-room.webp` | Rosters section | Yaroslav Shuraev | [Open Book on the Wooden Table](https://www.pexels.com/photo/open-book-on-the-wooden-table-6279773/) |
-| `wall-of-books.webp` | "Looking for a book?" panel | Stanislav Kondratiev | [Books on Wooden Shelves Inside Library](https://www.pexels.com/photo/books-on-wooden-shelves-inside-library-2908984/) |
 
 None of the photos shows an identifiable person. Under the Pexels License the photos must not be resold unaltered, used to imply
 endorsement by anyone depicted, or used as part of a trademark. To swap a photo, replace the file in `public/photos/`
