@@ -4,8 +4,9 @@ import { getCurrentUserOrNull } from "@/lib/auth/session";
 import { HOME } from "@/lib/auth/rbac";
 import { TIER_PRESETS } from "@/lib/services/licensing";
 import Image from "next/image";
-import { Check, Chip, Feature, Leaf, Photo, Pill, SiteFooter, SiteHeader } from "@/components/marketing";
+import { Check, Chip, Feature, Leaf, Photo, SiteFooter, SiteHeader } from "@/components/marketing";
 import { FindLibrary } from "@/components/FindLibrary";
+import { PlansAccordion } from "@/components/PlansAccordion";
 
 export const metadata = { title: "Bibliotek — Library management for schools & universities" };
 
@@ -136,19 +137,12 @@ export default async function Landing() {
         <section id="plans" className="bg-(--e-alt) py-14 md:py-20">
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <div className="mx-auto max-w-2xl text-center"><h2 className="text-4xl font-semibold leading-[1.1] tracking-[-0.025em]">Plans that fit your institution</h2><p className="mt-3 text-base text-(--e-muted)">Capacity is licensed by students and book copies. Operators can adjust limits per school at any time.</p></div>
-            <div className="mt-10 grid gap-4 md:grid-cols-3">
-              {PLANS.map((p) => {
-                const featured = "featured" in p && p.featured;
-                return (
-                  <div key={p.key} className={`card flex flex-col sm:p-6 ${featured ? "ring-2 ring-(--tint-text)" : ""}`}>
-                    {featured && <span className="mb-2 w-fit"><Pill tone="ochre">Suggested for schools</Pill></span>}
-                    <h3 className="text-2xl font-semibold tracking-[-0.02em]">{p.name}</h3><p className="text-sm text-(--e-muted)">{p.blurb}</p>
-                    <p className="mt-5 text-3xl font-semibold tracking-[-0.022em] tabular-nums">{TIER_PRESETS[p.key].maxStudents.toLocaleString()}<span className="ml-1.5 font-sans text-sm font-normal text-(--e-muted)">students</span></p>
-                    <p className="text-3xl font-semibold tracking-[-0.022em] tabular-nums">{TIER_PRESETS[p.key].maxBooks.toLocaleString()}<span className="ml-1.5 font-sans text-sm font-normal text-(--e-muted)">book copies</span></p>
-                    <ul className="mt-5 flex-1 space-y-2 text-sm text-(--e-muted)">{p.points.map((x) => <Check key={x}>{x}</Check>)}</ul>
-                  </div>
-                );
-              })}
+            <div className="mt-10">
+              <PlansAccordion defaultIndex={1} plans={PLANS.map((p) => ({
+                key: p.key, name: p.name, blurb: p.blurb, points: p.points,
+                students: TIER_PRESETS[p.key].maxStudents.toLocaleString("en-US"), books: TIER_PRESETS[p.key].maxBooks.toLocaleString("en-US"),
+                badge: "featured" in p && p.featured ? "Suggested for schools" : undefined,
+              }))} />
             </div>
             <p className="mt-6 text-center text-sm text-(--e-muted)">Plans are assigned by your platform operator when your school is set up.</p>
           </div>
