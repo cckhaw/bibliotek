@@ -3,35 +3,17 @@ import { redirect } from "next/navigation";
 import { getCurrentUserOrNull } from "@/lib/auth/session";
 import { HOME } from "@/lib/auth/rbac";
 import { TIER_PRESETS } from "@/lib/services/licensing";
-import Image from "next/image";
-import { Check, Chip, Feature, Leaf, Photo, SiteFooter, SiteHeader } from "@/components/marketing";
+import { Check, Container, Feature, Photo, SectionHeading, SiteFooter, SiteHeader } from "@/components/marketing";
 import { FindLibrary } from "@/components/FindLibrary";
 import { PlansAccordion } from "@/components/PlansAccordion";
 
 export const metadata = { title: "Bibliotek — Library management for schools & universities" };
 
-const ICONS: Record<string, string[]> = {
-  student: ["M12 4 2.5 9 12 14l9.5-5L12 4Z", "M6 11.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-4.5", "M21.5 9v6"],
-  librarian: ["M4 5h6.5A2.5 2.5 0 0 1 13 7.5V20a2 2 0 0 0-2-1.5H4V5Z", "M20 5h-5a2 2 0 0 0-2 1.6V20a2 2 0 0 1 2-1.5h5V5Z"],
-  admin: ["M3.5 20.5V9.5L12 4l8.5 5.5v11", "M9 20.5v-6h6v6", "M3 20.5h18"],
-  platform: ["M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Z", "M3 12h18", "M12 3c3 2.8 3 15.2 0 18", "M12 3c-3 2.8-3 15.2 0 18"],
-};
-
-function RoleIcon({ name }: { name: keyof typeof ICONS }) {
-  return (
-    <span className="grid size-11 place-items-center rounded-xl bg-(--e-sage) text-(--forest)">
-      <svg aria-hidden viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-        {ICONS[name].map((d) => <path key={d} d={d} />)}
-      </svg>
-    </span>
-  );
-}
-
 const ROLES = [
-  { icon: "student", title: "Students", text: "Search the catalogue, see what's on loan and when it's due, request extensions and check fines, from a phone or laptop.", cta: { href: "/register", label: "Register" } },
-  { icon: "librarian", title: "Librarians", text: "A scanner-first desk for checkouts and returns, an approvals queue, fines you can waive with a reason, and your duty roster.", cta: { href: "/login", label: "Sign in" } },
-  { icon: "admin", title: "School admins", text: "Import books and students from CSV, set borrowing rules, manage branches and staff, and publish the librarian roster.", cta: { href: "/login", label: "Sign in" } },
-  { icon: "platform", title: "Platform operators", text: "Provision schools, adjust plans and limits, and watch usage and storage across every tenant.", cta: { href: "/login", label: "Operator sign-in" } },
+  { title: "Students", text: "Search the catalogue, see what's on loan and when it's due, request extensions and check fines, from a phone or laptop.", cta: { href: "/register", label: "Sign up" } },
+  { title: "Librarians", text: "A scanner-first desk for checkouts and returns, an approvals queue, fines you can waive with a reason, and your duty roster.", cta: { href: "/login", label: "Sign in" } },
+  { title: "School admins", text: "Import books and students from CSV, set borrowing rules, manage branches and staff, and publish the librarian roster.", cta: { href: "/login", label: "Sign in" } },
+  { title: "Platform operators", text: "Provision schools, adjust plans and limits, and watch usage and storage across every tenant.", cta: { href: "/login", label: "Operator sign-in" } },
 ] as const;
 
 const PLANS = [
@@ -41,11 +23,16 @@ const PLANS = [
 ] as const;
 
 const VALUES = [
-  ["Rooted in your school", "Each school's data is isolated at the database level"],
-  ["Many branches, one catalogue", "Return a book to any branch of your school"],
-  ["Looks after itself", "Reminders, fines and shift emails run on schedule"],
-  ["Works anywhere", "Responsive on desktop, tablet and phone"],
+  ["Isolated by school", "Each school's data is separated at the database level."],
+  ["Many branches, one catalogue", "Return a book to any branch of your school."],
+  ["Runs itself", "Reminders, fines and shift emails run on schedule."],
+  ["Works anywhere", "Responsive on desktop, tablet and phone."],
 ] as const;
+
+/** Four columns separated by 1px rules. The container's background shows through the 1px gaps, so the dividers stay crisp
+ *  at every breakpoint (1, 2 or 4 columns) with no per-cell border bookkeeping. */
+const RULED = "grid gap-px overflow-hidden rounded-lg border border-(--e-border) bg-(--e-border) sm:grid-cols-2 lg:grid-cols-4";
+const CELL = "bg-(--e-bg) p-6";
 
 export default async function Landing() {
   // The public home page must stay up even if the database or a setting is broken: fall back to the signed-out page.
@@ -53,90 +40,91 @@ export default async function Landing() {
   if (user) redirect(HOME[user.role]);
 
   return (
-    <div className="theme-earth min-h-dvh font-sans">
+    <div className="marketing min-h-dvh font-sans">
       <SiteHeader />
       <main id="main">
-        {/* Hero */}
-        <section className="relative overflow-hidden">
-          <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-4 pb-16 pt-12 sm:px-6 md:grid-cols-2 md:gap-14 md:pb-24 md:pt-20">
-            <div>
-              <h1 className="text-5xl font-semibold leading-[1.05] tracking-[-0.03em] sm:text-6xl">
-                A library that <span className="text-(--forest)">grows</span> with every campus.
-              </h1>
-              <p className="mt-5 max-w-xl text-lg leading-relaxed text-(--e-muted)">
-                Catalogue books, check them out with a barcode scan, and let students return them at any branch. Fines, reminders and duty rosters tend themselves.
-              </p>
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <Link href="/register" className="btn-primary min-h-12 px-6 text-base">Student sign-up</Link>
-                <Link href="/login" className="btn-ghost min-h-12 border-(--e-border) bg-(--e-surface) px-6 text-base hover:bg-(--e-alt)">Staff sign-in</Link>
+        {/* Hero: copy on the left 6 columns, the product preview fills the right 6 to the full height of the block. */}
+        <section>
+          <Container>
+            <div className="grid grid-cols-1 gap-10 py-12 lg:grid-cols-12 lg:items-stretch lg:gap-x-12 lg:py-20">
+              <div className="flex flex-col justify-center lg:col-span-6">
+                <p className="text-sm font-medium text-(--e-muted)">Library management for schools and universities</p>
+                <h1 className="mt-4 text-5xl font-semibold leading-[1.02] tracking-[-0.04em] sm:text-6xl lg:text-[4.25rem]">
+                  A library that <span className="text-(--e-muted)">grows with every campus.</span>
+                </h1>
+                <p className="mt-6 max-w-xl text-lg leading-relaxed text-(--e-muted)">
+                  Catalogue books, check them out with a barcode scan, and let students return them at any branch. Fines, reminders and duty rosters tend themselves.
+                </p>
+                <div className="mt-8 flex flex-wrap items-center gap-3">
+                  <Link href="/register" className="btn-primary min-h-11 px-5 text-base">Sign up</Link>
+                  <Link href="/login" className="btn-outline min-h-11 px-5 text-base">Staff sign-in</Link>
+                </div>
+                <p className="mt-5 max-w-md text-sm leading-relaxed text-(--e-muted)">Students sign up here. Library staff are invited by their school; schools are set up by the platform operator.</p>
               </div>
-              <p className="mt-4 text-sm text-(--e-muted)">Library staff are invited by their school. Schools are set up by the platform operator.</p>
+              <div className="lg:col-span-6">
+                <Photo priority src="/photos/hero-shelves.webp" sizes="(min-width: 1024px) 560px, 100vw"
+                  alt="A long aisle of tall wooden bookshelves lit by warm hanging lamps"
+                  className="h-full" frameClassName="aspect-[4/3] lg:aspect-auto lg:min-h-[24rem] lg:flex-1"
+                  caption={<><b className="font-semibold">“Clean Code”</b> returned at Science Library</>} status={{ tone: "ochre", label: "Cross-branch" }} />
+              </div>
             </div>
-            <Photo shape="arch" priority src="/photos/hero-shelves.webp" width={1000} height={1100} sizes="(min-width: 768px) 28rem, 90vw"
-              alt="A long aisle of tall wooden bookshelves lit by warm hanging lamps"
-              caption={<Chip tone="ochre" label="Cross-branch"><b className="font-semibold">“Clean Code”</b> returned at Science Library</Chip>} />
-          </div>
+          </Container>
         </section>
 
-        {/* Values: the forest floor */}
-        <section aria-label="Highlights" className="bg-(--e-alt) text-(--e-text)">
-          <ul className="mx-auto grid max-w-6xl gap-6 px-4 py-8 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
-            {VALUES.map(([t, d]) => (
-              <li key={t} className="flex gap-3">
-                <Leaf className="mt-1 size-5 shrink-0 text-(--tint)" />
-                <div><p className="text-lg font-semibold tracking-[-0.01em]">{t}</p><p className="text-sm text-(--e-muted)">{d}</p></div>
-              </li>
-            ))}
-          </ul>
+        {/* Highlights: four columns, 1px rules. */}
+        <section aria-label="Highlights" className="border-t border-(--e-border)">
+          <Container className="py-10">
+            <ul className={RULED}>
+              {VALUES.map(([t, d]) => (
+                <li key={t} className={CELL}><p className="text-base font-medium">{t}</p><p className="mt-1.5 text-sm leading-relaxed text-(--e-muted)">{d}</p></li>
+              ))}
+            </ul>
+          </Container>
         </section>
 
         <div id="features" />
         <Feature eyebrow="Circulation" title="Scan, lend, return — anywhere on campus"
-          visual={<Photo src="/photos/ladder-shelves.webp" width={900} height={1100} sizes="(min-width: 768px) 28rem, 90vw" alt="Floor-to-ceiling shelves of colourful books beside a rustic wooden ladder" caption={<Chip tone="moss" label="Home branch unchanged">Returned at <b className="font-semibold">Science Library</b></Chip>} />}>
+          visual={<Photo src="/photos/ladder-shelves.webp" sizes="(min-width: 1024px) 700px, 100vw" alt="Floor-to-ceiling shelves of colourful books beside a rustic wooden ladder" caption="Returned at Science Library" status={{ tone: "moss", label: "Home branch unchanged" }} />}>
           <p>The librarian desk is built for barcode scanners: scan, hear it confirm, and the cursor is back in the field for the next book.</p>
-          <ul className="space-y-2"><Check>Return a book at a different branch — only its current location changes</Check><Check>Per-student-type loan periods and limits</Check><Check>Extension requests with librarian approval</Check></ul>
+          <ul className="space-y-2.5 text-sm"><Check>Return a book at a different branch — only its current location changes</Check><Check>Per-student-type loan periods and limits</Check><Check>Extension requests with librarian approval</Check></ul>
         </Feature>
 
-        <div className="bg-(--e-alt)">
-          <Feature flip eyebrow="Catalogue & imports" title="Bring your whole collection in, in minutes"
-            visual={<Photo src="/photos/card-catalogue.webp" width={1000} height={1000} sizes="(min-width: 768px) 28rem, 90vw" alt="Rows of wooden card-catalogue drawers with labels, topped with desk lamps" caption={<Chip tone="clay" label="2 to fix">1,246 of 1,248 rows ready to import</Chip>} />}>
-            <p>Upload a CSV, validate it first, and get a report that points at the exact line and column of every problem. Good rows import; bad rows come back for fixing.</p>
-            <ul className="space-y-2"><Check>ISBN-10/13 check-digit validation</Check><Check>Dewey, Library of Congress, genre, subject and tags</Check><Check>Bulk student import with automatic account invitations</Check></ul>
-          </Feature>
-        </div>
+        <Feature flip eyebrow="Catalogue & imports" title="Bring your whole collection in, in minutes"
+          visual={<Photo src="/photos/card-catalogue.webp" sizes="(min-width: 1024px) 700px, 100vw" alt="Rows of wooden card-catalogue drawers with labels, topped with desk lamps" caption="1,246 of 1,248 rows ready to import" status={{ tone: "clay", label: "2 to fix" }} />}>
+          <p>Upload a CSV, validate it first, and get a report that points at the exact line and column of every problem. Good rows import; bad rows come back for fixing.</p>
+          <ul className="space-y-2.5 text-sm"><Check>ISBN-10/13 check-digit validation</Check><Check>Dewey, Library of Congress, genre, subject and tags</Check><Check>Bulk student import with automatic account invitations</Check></ul>
+        </Feature>
 
         <Feature eyebrow="Fines & reminders" title="Overdue handling that runs itself"
-          visual={<Photo src="/photos/book-stack.webp" width={900} height={1100} sizes="(min-width: 768px) 28rem, 90vw" alt="A tall stack of books in front of warmly lit library shelves" caption={<Chip tone="clay" label="3d overdue">Reminder emailed automatically</Chip>} />}>
+          visual={<Photo src="/photos/book-stack.webp" sizes="(min-width: 1024px) 700px, 100vw" alt="A tall stack of books in front of warmly lit library shelves" caption="Reminder emailed automatically" status={{ tone: "clay", label: "3d overdue" }} />}>
           <p>Due-soon and overdue emails go out automatically, fines accrue daily by your rules, and borrowing pauses when unpaid fines reach your limit.</p>
-          <ul className="space-y-2"><Check>Free rental days, grace period, daily rate and cap per policy</Check><Check>Librarians can waive or record payment — every change is audited</Check><Check>Safe to re-run: no duplicate emails or double charges</Check></ul>
+          <ul className="space-y-2.5 text-sm"><Check>Free rental days, grace period, daily rate and cap per policy</Check><Check>Librarians can waive or record payment — every change is audited</Check><Check>Safe to re-run: no duplicate emails or double charges</Check></ul>
         </Feature>
 
-        <div className="bg-(--e-alt)">
-          <Feature flip eyebrow="Rosters" title="Duty rosters your librarians actually receive"
-            visual={<Photo src="/photos/reading-room.webp" width={900} height={1100} sizes="(min-width: 768px) 28rem, 90vw" alt="An open book on a light wooden table in a bright library reading area" caption={<Chip tone="moss" label="Sent">Roster published, librarians notified</Chip>} />}>
-            <p>Draft the week by branch and time, publish when it&apos;s ready, and each librarian gets one email. Change a published shift and they&apos;re told again. Double-booking is blocked.</p>
-          </Feature>
-        </div>
+        <Feature flip eyebrow="Rosters" title="Duty rosters your librarians actually receive"
+          visual={<Photo src="/photos/reading-room.webp" sizes="(min-width: 1024px) 700px, 100vw" alt="An open book on a light wooden table in a bright library reading area" caption="Roster published, librarians notified" status={{ tone: "moss", label: "Sent" }} />}>
+          <p>Draft the week by branch and time, publish when it&apos;s ready, and each librarian gets one email. Change a published shift and they&apos;re told again. Double-booking is blocked.</p>
+        </Feature>
 
-        {/* Roles */}
-        <section id="roles" className="mx-auto max-w-6xl px-4 py-14 sm:px-6 md:py-20">
-          <div className="mx-auto max-w-2xl text-center"><h2 className="text-4xl font-semibold leading-[1.1] tracking-[-0.025em]">A place for everyone in the library</h2><p className="mt-3 text-base text-(--e-muted)">Four role-based portals, one sign-in.</p></div>
-          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {ROLES.map((r) => (
-              <div key={r.title} className="card flex flex-col">
-                <RoleIcon name={r.icon} />
-                <h3 className="mt-4 text-xl font-semibold tracking-[-0.015em]">{r.title}</h3>
-                <p className="mt-1 flex-1 text-sm leading-relaxed text-(--e-muted)">{r.text}</p>
-                <Link href={r.cta.href} className="mt-4 text-sm font-semibold text-(--tint-text) hover:underline">{r.cta.label} →</Link>
-              </div>
-            ))}
-          </div>
+        {/* Roles: a ruled four-column table, not cards. */}
+        <section id="roles" className="border-t border-(--e-border)">
+          <Container className="py-14 lg:py-20">
+            <SectionHeading title="A place for everyone in the library">Four role-based portals, one sign-in.</SectionHeading>
+            <ul className={`mt-10 ${RULED}`}>
+              {ROLES.map((r) => (
+                <li key={r.title} className={`${CELL} flex flex-col`}>
+                  <h3 className="text-lg font-semibold tracking-[-0.015em]">{r.title}</h3>
+                  <p className="mt-2 flex-1 text-sm leading-relaxed text-(--e-muted)">{r.text}</p>
+                  <Link href={r.cta.href} className="mt-5 text-sm font-medium text-(--e-text) underline-offset-4 hover:underline">{r.cta.label} →</Link>
+                </li>
+              ))}
+            </ul>
+          </Container>
         </section>
 
-        {/* Plans */}
-        <section id="plans" className="bg-(--e-alt) py-14 md:py-20">
-          <div className="mx-auto max-w-6xl px-4 sm:px-6">
-            <div className="mx-auto max-w-2xl text-center"><h2 className="text-4xl font-semibold leading-[1.1] tracking-[-0.025em]">Plans that fit your institution</h2><p className="mt-3 text-base text-(--e-muted)">Capacity is licensed by students and book copies. Operators can adjust limits per school at any time.</p></div>
+        <section id="plans" className="border-t border-(--e-border)">
+          <Container className="py-14 lg:py-20">
+            <SectionHeading title="Plans that fit your institution">Capacity is licensed by students and book copies. Operators can adjust limits per school at any time.</SectionHeading>
             <div className="mt-10">
               <PlansAccordion defaultIndex={1} plans={PLANS.map((p) => ({
                 key: p.key, name: p.name, blurb: p.blurb, points: p.points,
@@ -144,26 +132,23 @@ export default async function Landing() {
                 badge: "featured" in p && p.featured ? "Suggested for schools" : undefined,
               }))} />
             </div>
-            <p className="mt-6 text-center text-sm text-(--e-muted)">Plans are assigned by your platform operator when your school is set up.</p>
-          </div>
+            <p className="mt-5 text-sm text-(--e-muted)">Plans are assigned by your platform operator when your school is set up.</p>
+          </Container>
         </section>
 
-        {/* Find a library + closing call to action */}
-        <section id="find" className="mx-auto max-w-6xl px-4 py-14 sm:px-6 md:py-20">
-          <div className="relative isolate overflow-hidden rounded-3xl border border-white/10 bg-(--e-deep) p-6 text-(--e-deep-text) sm:p-12">
-            <Image src="/photos/wall-of-books.webp" alt="" fill sizes="(min-width: 1152px) 72rem, 100vw" className="-z-20 object-cover" />
-            <div aria-hidden className="absolute inset-0 -z-10 bg-(--e-deep)/[0.88]" />
-            <div className="relative grid items-center gap-8 md:grid-cols-2">
-              <div>
-                <h2 className="text-4xl font-semibold leading-[1.1] tracking-[-0.025em]">Looking for a book?</h2>
-                <p className="mt-3 text-(--e-deep-muted)">Enter your school&apos;s code to search its catalogue — no account needed.</p>
+        <section id="find" className="border-t border-(--e-border)">
+          <Container className="py-14 lg:py-20">
+            <div className="grid grid-cols-1 items-center gap-8 rounded-lg border border-(--e-border) bg-(--e-surface) p-6 sm:p-8 lg:grid-cols-12 lg:gap-x-12 lg:p-10">
+              <div className="lg:col-span-6">
+                <h2 className="text-3xl font-semibold leading-[1.1] tracking-[-0.03em] sm:text-4xl">Looking for a book?</h2>
+                <p className="mt-3 text-base leading-relaxed text-(--e-muted)">Enter your school&apos;s code to search its catalogue — no account needed.</p>
               </div>
-              <div>
-                <FindLibrary tone="onDark" />
-                <p className="mt-4 text-sm text-(--e-deep-muted)">New student? <Link href="/register" className="font-semibold text-(--e-deep-text) underline">Create your account</Link></p>
+              <div className="lg:col-span-6">
+                <FindLibrary />
+                <p className="mt-4 text-sm text-(--e-muted)">New student? <Link href="/register" className="font-medium text-(--e-text) underline underline-offset-4">Create your account</Link></p>
               </div>
             </div>
-          </div>
+          </Container>
         </section>
       </main>
       <SiteFooter />

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { gsap } from "gsap";
-import { Leaf, Pill } from "@/components/marketing";
+import { Pill, Tick } from "@/components/marketing";
 
 import "./PlansAccordion.css";
 
@@ -100,7 +100,7 @@ export function PlansAccordion({
             onClick={() => setActive(i)}
             onKeyDown={(e) => onKeyDown(i, e)}>
             <div className="pa-main">
-              {p.badge && <span className="mb-3 block w-fit"><Pill tone="moss">{p.badge}</Pill></span>}
+              {p.badge && <span className="mb-3 block w-fit"><Pill tone="sand">{p.badge}</Pill></span>}
               <h3 className="text-2xl font-semibold tracking-[-0.02em]">{p.name}</h3>
               <p className="mt-1 text-sm text-(--e-muted)">{p.blurb}</p>
               <p className="mt-5 text-3xl font-semibold leading-none tracking-[-0.022em] tabular-nums">{p.students}<span className="mt-1 block text-sm font-normal tracking-normal text-(--e-muted)">students</span></p>
@@ -111,7 +111,7 @@ export function PlansAccordion({
                 <li key={pt} className="pa-feature flex gap-2.5"
                   ref={(el) => { (features.current[i] ??= [])[j] = el; }}
                   style={open ? undefined : { opacity: 0, transform: "translateX(-14px)" }}>
-                  <Leaf className="mt-0.5 size-4 shrink-0 text-(--tint)" /><span>{pt}</span>
+                  <Tick className="mt-0.5 size-4 shrink-0 text-(--e-muted)" /><span>{pt}</span>
                 </li>
               ))}
             </ul>

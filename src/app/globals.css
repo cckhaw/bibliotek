@@ -1,9 +1,9 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  /* Headings use the platform system font: it ships optical sizing and tuned tracking. Tracking is set per size below. */
-  --font-display: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  /* Geist (self-hosted via the `geist` package, wired in layout.tsx) with the platform stack as the fallback. */
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: var(--font-sans);
 
   /* Tailwind's own slate / zinc / emerald / amber / red scales are used as shipped. Only the brand utilities below are
      custom, and they follow the light/dark tint tokens in :root so one class works in both appearances. */
@@ -15,18 +15,18 @@
  * COLOR SYSTEM: a neutral canvas with one green tint.
  *
  *  1. Canvas is neutral: slate-50 in light, zinc-950 in dark. Large areas are never green.
- *  2. --tint is Apple's system green (#34C759 light, #30D158 dark), reserved for what is interactive or active: primary
- *     buttons, the active nav item, toggles/checkboxes, progress, focus. It is a FILL colour.
+ *  2. --tint is a softened system green (#42B860 light, #40BF60 dark: Apple's #34C759 / #30D158 with 12-14 points less
+ *     HSL saturation), reserved for what is interactive or active: primary buttons, the active nav item, toggles/checkboxes, progress, focus. It is a FILL colour.
  *  3. Containers are translucent neutral fills with a hairline border.
  *  4. Green text is deep forest (emerald-800 / emerald-200), never neon.
  *
- * Contrast notes (WCAG): #34C759 on white is only 2.2:1, so it never carries text or a lone edge in light mode.
- * Text on a tint fill is near-black (--on-tint, 9:1), and light-mode link text / focus rings use --tint-text (5.4:1).
- * In dark mode #30D158 is 9.8:1 on the canvas, so the tint itself is used for links and focus.
+ * Contrast notes (WCAG): the light tint on white is only 2.5:1, so it never carries text or a lone edge in light mode.
+ * Text on a tint fill is near-black (--on-tint, 7.8:1 light / 8.4:1 dark), and light-mode link text / focus rings use
+ * --tint-text (6.0:1). In dark mode the tint is 8.4:1 on the canvas, so it is used directly for links and focus.
  */
 :root {
-  --tint: #34c759;
-  --tint-text: #1f7a36;
+  --tint: #42b860;
+  --tint-text: #29703b;
   --on-tint: #09090b;
   --forest: #065f46;               /* emerald-800: green labels and statuses */
 
@@ -63,8 +63,8 @@
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --tint: #30d158;
-    --tint-text: #30d158;
+    --tint: #40bf60;
+    --tint-text: #40bf60;
     --forest: #a7f3d0;             /* emerald-200 */
 
     --e-bg: #09090b;               /* zinc-950: canvas */
@@ -111,10 +111,12 @@
   .card { @apply rounded-2xl border border-(--e-border) bg-(--e-surface) p-5 sm:p-6; box-shadow: var(--lift); }
   .btn-primary { @apply btn bg-(--tint) text-(--on-tint) hover:brightness-95; }
   .btn-ghost { @apply btn bg-black/5 hover:bg-black/8 dark:bg-white/8 dark:hover:bg-white/12; }
+  /* Secondary action: a crisp 1px outline, never a fill, so the one green button stays the single primary. */
+  .btn-outline { @apply btn border border-(--e-input-border) bg-transparent text-(--e-text) hover:bg-(--e-alt); }
   .btn-danger { @apply btn bg-red-600 text-white hover:bg-red-700; }
   .btn-sm { @apply min-h-8 rounded-lg px-3 py-1 text-xs; }
   .label { @apply mb-1.5 block text-sm font-medium text-(--e-text); }
-  .input { @apply block w-full rounded-xl border border-(--e-input-border) bg-(--e-field) px-3.5 py-2.5 text-(--e-text) placeholder:text-slate-500 focus:border-(--tint-text) focus:outline-none focus:ring-4 focus:ring-[color-mix(in_srgb,var(--tint)_28%,transparent)] dark:placeholder:text-zinc-400; transition: box-shadow 150ms ease-out, border-color 150ms ease-out; }
+  .input { @apply block w-full rounded-xl border border-(--e-input-border) bg-(--e-field) px-3.5 py-2.5 text-(--e-text) placeholder:text-(--e-muted) focus:border-(--tint-text) focus:outline-none focus:ring-4 focus:ring-[color-mix(in_srgb,var(--tint)_28%,transparent)]; transition: box-shadow 150ms ease-out, border-color 150ms ease-out; }
   .badge-green { @apply badge bg-emerald-100 text-emerald-800 dark:bg-emerald-400/10 dark:text-emerald-200; }
   .badge-amber { @apply badge bg-amber-100 text-amber-800 dark:bg-amber-400/10 dark:text-amber-200; }
   .badge-red { @apply badge bg-red-100 text-red-800 dark:bg-red-400/10 dark:text-red-200; }
@@ -171,5 +173,18 @@
   .btn-ghost { box-shadow: inset 0 0 0 1px var(--e-text); }
 }
 
-/* The home page wraps itself in .theme-earth; the page background and text now come from the global tokens. */
-.theme-earth { background: var(--e-bg); color: var(--e-text); }
+/*
+ * The public landing page is always dark (neutral near-black, flat 1px zinc borders, no shadows), whatever the OS
+ * setting, so it carries its own copy of the dark tokens. Keep these in step with the dark block in :root above.
+ */
+.marketing {
+  color-scheme: dark;
+  --tint: #40bf60; --tint-text: #40bf60; --forest: #a7f3d0;
+  --e-bg: #09090b; --e-alt: #18181b; --e-surface: #101012; --e-field: #18181b;
+  --e-text: #fafafa; --e-muted: #a1a1aa; --e-border: #27272a; --e-input-border: #6e6e73;
+  --e-focus: #40bf60; --e-accent: var(--tint-text);
+  background: var(--e-bg); color: var(--e-text);
+}
+.marketing .btn, .marketing .input { border-radius: 0.5rem; }
+/* Overscroll / rubber-band area matches the page instead of flashing the light body colour. */
+body:has(.marketing) { background: #09090b; }

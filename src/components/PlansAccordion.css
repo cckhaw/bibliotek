@@ -21,8 +21,8 @@
   overflow: hidden;
   padding: 1.25rem;
   border: 1px solid var(--e-border);
-  border-radius: 1rem;
-  background: var(--e-bg);
+  border-radius: 0.5rem;
+  background: var(--e-surface);
   outline: none;
   cursor: pointer;
   transform-style: preserve-3d;
@@ -35,9 +35,10 @@
     box-shadow 200ms ease-out;
 }
 
+/* The open plan is marked by a stronger neutral edge and a lifted fill: the green is kept for actions. */
 .pa-panel[aria-current="true"] {
-  background: var(--e-field);
-  border-color: color-mix(in srgb, var(--tint-text) 55%, transparent);
+  background: var(--e-alt);
+  border-color: var(--e-input-border);
 }
 
 .pa-panel:focus-visible {
