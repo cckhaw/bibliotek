@@ -51,32 +51,6 @@ export function SiteHeader() {
 }
 
 export type Hue = "blue" | "violet" | "orange" | "teal";
-const GLYPHS = {
-  shield: ["M12 3 5 6v5c0 4.5 3 8 7 10 4-2 7-5.5 7-10V6l-7-3Z", "m9 12 2 2 4-4"],
-  network: ["M12 5v6", "M12 11H6v4", "M12 11h6v4", "M12 3.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Z", "M6 15a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Z", "M18 15a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Z"],
-  clock: ["M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Z", "M12 7v5l3 2"],
-  display: ["M3.5 5h17v11h-17Z", "M9 20h6", "M12 16v4"],
-  student: ["M12 4 2.5 9 12 14l9.5-5L12 4Z", "M6 11.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-4.5", "M21.5 9v6"],
-  librarian: ["M4 5h6.5A2.5 2.5 0 0 1 13 7.5V20a2 2 0 0 0-2-1.5H4V5Z", "M20 5h-5a2 2 0 0 0-2 1.6V20a2 2 0 0 1 2-1.5h5V5Z"],
-  admin: ["M3.5 20.5V9.5L12 4l8.5 5.5v11", "M9 20.5v-6h6v6", "M3 20.5h18"],
-  globe: ["M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Z", "M3 12h18", "M12 3c3 2.8 3 15.2 0 18", "M12 3c-3 2.8-3 15.2 0 18"],
-  swap: ["M7 8h12", "m16 4 3 4-3 4", "M17 16H5", "m8 12-3 4 3 4"],
-  upload: ["M12 16V5", "m7 9 5-5 5 5", "M5 19h14"],
-  bell: ["M6 16v-5a6 6 0 1 1 12 0v5l1.5 2h-15L6 16Z", "M10 20.5a2 2 0 0 0 4 0"],
-  calendar: ["M5 6h14v14H5Z", "M5 10.5h14", "M9 3.5v4", "M15 3.5v4"],
-} as const;
-export type GlyphName = keyof typeof GLYPHS;
-
-/** A tinted squircle with a glyph, in the hue given by the `hue-*` class it sits under (see globals.css). Decorative. */
-export function Tile({ icon, hue, className = "size-9" }: { icon: GlyphName; hue: Hue; className?: string }) {
-  return (
-    <span aria-hidden className={`tile hue-${hue} ${className}`}>
-      <svg viewBox="0 0 24 24" className="size-[58%]" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-        {GLYPHS[icon].map((d) => <path key={d} d={d} />)}
-      </svg>
-    </span>
-  );
-}
 
 export function Tick({ className = "size-4" }: { className?: string }) {
   return (
@@ -100,13 +74,13 @@ export function SectionHeading({ eyebrow, title, children }: { eyebrow?: string;
 }
 
 /** Text (5 columns) beside a product preview (7 columns) on the 12-column grid; `flip` swaps the sides. */
-export function Feature({ eyebrow, title, children, visual, flip, hue, icon }: { eyebrow: string; title: string; children: ReactNode; visual: ReactNode; flip?: boolean; hue: Hue; icon: GlyphName }) {
+export function Feature({ eyebrow, title, children, visual, flip, hue }: { eyebrow: string; title: string; children: ReactNode; visual: ReactNode; flip?: boolean; hue: Hue }) {
   return (
     <section className="border-t border-(--e-rule)">
       <Container>
         <div className="grid grid-cols-1 items-center gap-8 py-14 lg:grid-cols-12 lg:gap-x-12 lg:py-20">
           <div className={`reveal hue-${hue} lg:col-span-5 ${flip ? "lg:order-2" : ""}`}>
-            <p className="flex items-center gap-2.5 text-sm font-medium text-(--hue-text)"><Tile icon={icon} hue={hue} className="size-8" />{eyebrow}</p>
+            <p className="text-sm font-medium text-(--hue-text)">{eyebrow}</p>
             <h3 className="mt-2 text-3xl font-semibold leading-[1.1] tracking-[-0.03em] sm:text-4xl">{title}</h3>
             <div className="mt-4 space-y-4 text-base leading-relaxed text-(--e-muted)">{children}</div>
           </div>
