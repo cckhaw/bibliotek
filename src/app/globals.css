@@ -52,7 +52,7 @@
   --e-focus: var(--tint-text);
 
   /* Materials: translucent chrome that content scrolls under. The bright top edge is the light catching the glass. */
-  --mat-bg: rgb(248 250 252 / 0.72);
+  --mat-bg: rgb(248 250 252 / 0.62);
   --mat-edge: rgb(255 255 255 / 0.6);
   --hairline: rgb(0 0 0 / 0.08);
   --lift: 0 1px 2px rgb(0 0 0 / 0.04);
@@ -88,7 +88,7 @@
     --c-teal: #2dd4bf;   --c-teal-text: #2dd4bf;
     --e-input-border: #6e6e73;
 
-    --mat-bg: rgb(9 9 11 / 0.72); --mat-edge: rgb(255 255 255 / 0.07); --hairline: rgb(255 255 255 / 0.1);
+    --mat-bg: rgb(9 9 11 / 0.62); --mat-edge: rgb(255 255 255 / 0.07); --hairline: rgb(255 255 255 / 0.1);
     --lift: none;
   }
 }
@@ -138,6 +138,30 @@
   .table td { @apply px-5 py-3 align-top sm:px-6; box-shadow: inset 0 -1px 0 var(--hairline); }
   .table tbody tr:last-child td { box-shadow: none; }
 
+  /*
+   * Narrow tables become lists. "Narrow" is the width of the card the table sits in, not the screen: from 768px the sidebar
+   * takes 240px, so a viewport breakpoint would be wrong exactly where tables overflow. Each row turns into a small card: the
+   * first cell is the row's title, the other cells are labelled values in two columns, and a cell with no header (the
+   * actions) spans the full row. Labels come from the column headers via data-label, which <TableLabels /> fills in at
+   * runtime, so no page has to repeat them. (`.table` also names Tailwind's display utility, hence the !important.)
+   */
+  .table-wrap { container-type: inline-size; }
+  @container (max-width: 40rem) {
+    .table { min-width: 0 !important; }
+    .table thead { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+    .table, .table tbody { display: block !important; }
+    .table tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem 1rem; padding: 0.875rem 1.25rem; box-shadow: inset 0 -1px 0 var(--hairline); }
+    @media (min-width: 40rem) { .table tr { padding-inline: 1.5rem; } }
+    .table tbody tr:last-child { box-shadow: none; }
+    .table td { display: block; min-width: 0; padding: 0; box-shadow: none; overflow-wrap: anywhere; }
+    .table td::before { content: attr(data-label); display: block; margin-bottom: 0.125rem; font-size: 0.75rem; font-weight: 500; color: var(--e-muted); }
+    .table td:first-child { grid-column: 1 / -1; font-size: 1rem; }
+    .table td:not([data-label]), .table td[data-label=""] { grid-column: 1 / -1; }
+    .table td:first-child::before, .table td:not([data-label])::before, .table td[data-label=""]::before { content: none; }
+    .table td:empty { display: none; }
+    .table td.flex { display: flex; flex-wrap: wrap; }
+  }
+
   /* Type: tracking tightens as size grows, leading shrinks as size grows (display tight, body open). */
   .h1 { @apply text-[1.75rem] leading-[1.1] font-semibold tracking-[-0.022em] sm:text-[2.125rem]; }
   .h2 { @apply mb-4 text-lg leading-snug font-semibold tracking-[-0.01em] sm:text-xl; }
@@ -154,8 +178,6 @@
   .hue-violet { --hue: var(--c-violet); --hue-text: var(--c-violet-text); }
   .hue-orange { --hue: var(--c-orange); --hue-text: var(--c-orange-text); }
   .hue-teal { --hue: var(--c-teal); --hue-text: var(--c-teal-text); }
-  /* Icon tile (the Settings-app squircle): a 14% tint of the hue behind a glyph in the hue. Size it with size-*. */
-  .tile { @apply grid shrink-0 place-items-center rounded-[0.625rem]; background: color-mix(in srgb, var(--hue) 14%, transparent); color: var(--hue); }
   /* Stat tiles pick up a hue by position, so dashboards get colour without every page choosing one. */
   .stat { --hue: var(--e-muted); }
   .stat:nth-child(4n+1) { --hue: var(--c-blue); }
