@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { NavLinks } from "@/components/NavLinks";
 import { LogoutButton } from "@/components/LogoutButton";
+import { TableLabels } from "@/components/TableLabels";
 import { Mark } from "@/components/marketing";
 
 export interface ShellUser { fullName: string; role: string; tenantName: string | null; home: string }
@@ -34,6 +35,7 @@ export function AppShell({ user, nav, children }: { user: ShellUser; nav: { href
         </div>
       </aside>
       <main className="mx-auto w-full min-w-0 max-w-6xl flex-1 px-5 py-8 sm:px-8 md:py-12">{children}</main>
+      <TableLabels />
     </div>
   );
 }
