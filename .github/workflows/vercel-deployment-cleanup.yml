@@ -1,0 +1,221 @@
+name: Temporary Vercel deployment cleanup
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: vercel-deployment-cleanup
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - name: Keep the newest production deployment
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_TEAM_ID: ${{ secrets.VERCEL_TEAM_ID }}
+        run: |
+          if [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "::error::This cleanup must run from the main branch."
+            exit 1
+          fi
+          node --input-type=module <<'NODE'
+          const api = "https://api.vercel.com";
+          const repository = "cckhaw/bibliotek";
+          const { VERCEL_TOKEN: token, VERCEL_PROJECT_ID: projectId, VERCEL_TEAM_ID: teamId } = process.env;
+
+          for (const [name, value] of Object.entries({ VERCEL_TOKEN: token, VERCEL_PROJECT_ID: projectId, VERCEL_TEAM_ID: teamId })) {
+            if (!value) throw new Error(`Required repository secret ${name} is unavailable.`);
+          }
+
+          async function request(path, options = {}) {
+            const response = await fetch(`${api}${path}`, {
+              ...options,
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+                ...options.headers,
+              },
+            });
+            if (!response.ok) throw new Error(`Vercel API request failed with HTTP ${response.status}.`);
+            return response.json();
+          }
+
+          const teamQuery = new URLSearchParams({ teamId });
+          const project = await request(`/v9/projects/${encodeURIComponent(projectId)}?${teamQuery}`);
+          if (
+            project.id !== projectId ||
+            !["github", "github-limited"].includes(project.link?.type) ||
+            project.link.repo !== repository
+          ) {
+            throw new Error("The configured Vercel project is not unambiguously linked to cckhaw/bibliotek.");
+          }
+          console.log(`Confirmed Vercel project ${project.name} is linked to ${repository}.`);
+
+          async function listAllDeployments() {
+            const deployments = new Map();
+            const cursors = new Set();
+            let until;
+
+            for (let page = 0; page < 1000; page += 1) {
+              const query = new URLSearchParams({ projectId, teamId, limit: "100" });
+              if (until !== undefined) query.set("until", String(until));
+              const result = await request(`/v7/deployments?${query}`);
+              if (!Array.isArray(result.deployments) || !result.pagination) {
+                throw new Error("Vercel returned an unexpected deployment-list response.");
+              }
+              for (const deployment of result.deployments) {
+                if (
+                  !deployment ||
+                  deployment.projectId !== projectId ||
+                  typeof deployment.uid !== "string" ||
+                  !deployment.uid.startsWith("dpl_") ||
+                  !Number.isSafeInteger(Number(deployment.created)) ||
+                  typeof deployment.readyState !== "string" ||
+                  !Object.hasOwn(deployment, "target")
+                ) {
+                  throw new Error("A deployment has incomplete or mismatched identity data; no deployments were changed.");
+                }
+                const previous = deployments.get(deployment.uid);
+                if (previous && snapshot([previous]) !== snapshot([deployment])) {
+                  throw new Error(`Deployment ${deployment.uid} changed between pagination pages.`);
+                }
+                deployments.set(deployment.uid, deployment);
+              }
+
+              const next = result.pagination.next;
+              if (next === null) return [...deployments.values()];
+              const cursor = Number(next);
+              if (!Number.isSafeInteger(cursor) || cursor <= 0 || cursors.has(cursor) || (until !== undefined && cursor >= until)) {
+                throw new Error("Vercel returned an invalid or non-advancing pagination cursor.");
+              }
+              cursors.add(cursor);
+              until = cursor;
+            }
+            throw new Error("Deployment pagination exceeded the safety limit.");
+          }
+
+          function classify(deployment) {
+            if (deployment.customEnvironment) {
+              throw new Error(`Deployment ${deployment.uid} uses a custom environment; cleanup scope is ambiguous.`);
+            }
+            if (deployment.target === "production") return "production";
+            if (deployment.target === null) return "preview";
+            throw new Error(`Deployment ${deployment.uid} has unsupported target ${String(deployment.target)}; no deployments were changed.`);
+          }
+
+          function plan(deployments) {
+            const active = deployments.filter((deployment) => deployment.readyState !== "DELETED");
+            const scoped = active.map((deployment) => ({ deployment, environment: classify(deployment) }));
+            const production = scoped.filter(({ environment }) => environment === "production");
+            if (production.length === 0) throw new Error("No active production deployment was found; no deployments were changed.");
+
+            const timestamps = production.map(({ deployment }) => Number(deployment.created));
+            const newestTimestamp = timestamps.reduce((latest, timestamp) => Math.max(latest, timestamp), -Infinity);
+            const newest = production.filter(({ deployment }) => Number(deployment.created) === newestTimestamp);
+            if (newest.length !== 1) throw new Error("The newest production deployment is ambiguous because creation timestamps tie.");
+
+            const retained = newest[0].deployment;
+            const deletions = scoped
+              .filter(({ deployment }) => deployment.uid !== retained.uid)
+              .map(({ deployment, environment }) => ({ deployment, environment }));
+            return { retained, deletions };
+          }
+
+          function snapshot(deployments) {
+            return JSON.stringify(
+              deployments
+                .map(({ uid, created, target, readyState, customEnvironment }) => ({
+                  uid,
+                  created,
+                  target,
+                  readyState,
+                  customEnvironment: Boolean(customEnvironment),
+                }))
+                .sort((a, b) => a.uid.localeCompare(b.uid)),
+            );
+          }
+
+          const initial = await listAllDeployments();
+          const initialPlan = plan(initial);
+          console.log(`Keeping newest production deployment ${initialPlan.retained.uid} (created ${initialPlan.retained.created}).`);
+          console.log(`Deleting ${initialPlan.deletions.length} other preview/production deployments.`);
+          for (const { deployment, environment } of initialPlan.deletions) {
+            console.log(`Planned deletion: ${deployment.uid} (${environment}, created ${deployment.created}).`);
+          }
+
+          const confirmed = await listAllDeployments();
+          if (snapshot(initial) !== snapshot(confirmed)) {
+            throw new Error("The deployment list changed during preflight; no deployments were changed.");
+          }
+
+          for (const { deployment } of initialPlan.deletions) {
+            const query = new URLSearchParams({ teamId });
+            const result = await request(`/v13/deployments/${encodeURIComponent(deployment.uid)}?${query}`, { method: "DELETE" });
+            if (result.state !== "DELETED" || result.uid !== deployment.uid) {
+              throw new Error(`Deletion of ${deployment.uid} was not confirmed; stopping further deletions.`);
+            }
+            console.log(`Deleted ${deployment.uid}.`);
+          }
+
+          const remaining = await listAllDeployments();
+          const remainingPlan = plan(remaining);
+          if (
+            remainingPlan.retained.uid !== initialPlan.retained.uid ||
+            remainingPlan.deletions.length !== 0 ||
+            snapshot(remaining.filter((deployment) => deployment.readyState !== "DELETED")) !==
+              snapshot([initialPlan.retained])
+          ) {
+            throw new Error("Post-cleanup verification failed; the temporary workflow was not removed.");
+          }
+          console.log(`Verified ${initialPlan.retained.uid} is the only remaining preview/production deployment.`);
+          NODE
+
+  remove-workflow:
+    needs: cleanup
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - name: Remove this temporary workflow
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          WORKFLOW_PATH: .github/workflows/vercel-deployment-cleanup.yml
+        run: |
+          node --input-type=module <<'NODE'
+          const [owner, repo] = process.env.GITHUB_REPOSITORY.split("/");
+          const path = process.env.WORKFLOW_PATH;
+          const api = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+          const headers = {
+            Accept: "application/vnd.github+json",
+            Authorization: `Bearer ${process.env.GH_TOKEN}`,
+            "X-GitHub-Api-Version": "2022-11-28",
+          };
+
+          const current = await fetch(`${api}?ref=main`, { headers });
+          if (!current.ok) throw new Error(`Could not read the temporary workflow (HTTP ${current.status}).`);
+          const file = await current.json();
+          if (file.path !== path || typeof file.sha !== "string") {
+            throw new Error("The workflow file identity could not be verified; it was not removed.");
+          }
+
+          const removed = await fetch(api, {
+            method: "DELETE",
+            headers: { ...headers, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              message: "Remove temporary Vercel deployment cleanup workflow",
+              sha: file.sha,
+              branch: "main",
+            }),
+          });
+          if (!removed.ok) throw new Error(`Could not remove the temporary workflow (HTTP ${removed.status}).`);
+          console.log("Removed the temporary cleanup workflow from main.");
+          NODE
