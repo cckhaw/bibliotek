@@ -26,7 +26,7 @@ jobs:
           fi
           node --input-type=module <<'NODE'
           const api = "https://api.vercel.com";
-          const repository = "cckhaw/bibliotek";
+          const repository = { org: "cckhaw", repo: "bibliotek" };
           const { VERCEL_TOKEN: token, VERCEL_PROJECT_ID: projectId, VERCEL_TEAM_ID: teamId } = process.env;
 
           for (const [name, value] of Object.entries({ VERCEL_TOKEN: token, VERCEL_PROJECT_ID: projectId, VERCEL_TEAM_ID: teamId })) {
@@ -51,11 +51,12 @@ jobs:
           if (
             project.id !== projectId ||
             !["github", "github-limited"].includes(project.link?.type) ||
-            project.link.repo !== repository
+            project.link.org !== repository.org ||
+            project.link.repo !== repository.repo
           ) {
             throw new Error("The configured Vercel project is not unambiguously linked to cckhaw/bibliotek.");
           }
-          console.log(`Confirmed Vercel project ${project.name} is linked to ${repository}.`);
+          console.log(`Confirmed Vercel project ${project.name} is linked to ${repository.org}/${repository.repo}.`);
 
           async function listAllDeployments() {
             const deployments = new Map();
