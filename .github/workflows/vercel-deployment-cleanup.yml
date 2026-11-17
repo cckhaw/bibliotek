@@ -77,6 +77,7 @@ jobs:
                   typeof deployment.uid !== "string" ||
                   !deployment.uid.startsWith("dpl_") ||
                   !Number.isSafeInteger(Number(deployment.created)) ||
+                  typeof deployment.state !== "string" ||
                   typeof deployment.readyState !== "string" ||
                   !Object.hasOwn(deployment, "target")
                 ) {
@@ -111,7 +112,12 @@ jobs:
           }
 
           function plan(deployments) {
-            const active = deployments.filter((deployment) => deployment.readyState !== "DELETED");
+            const active = deployments.filter(
+              (deployment) =>
+                deployment.state !== "DELETED" &&
+                deployment.readyState !== "DELETED" &&
+                !deployment.deleted,
+            );
             const scoped = active.map((deployment) => ({ deployment, environment: classify(deployment) }));
             const production = scoped.filter(({ environment }) => environment === "production");
             if (production.length === 0) throw new Error("No active production deployment was found; no deployments were changed.");
@@ -131,11 +137,13 @@ jobs:
           function snapshot(deployments) {
             return JSON.stringify(
               deployments
-                .map(({ uid, created, target, readyState, customEnvironment }) => ({
+                .map(({ uid, created, target, state, readyState, deleted, customEnvironment }) => ({
                   uid,
                   created,
                   target,
+                  state,
                   readyState,
+                  deleted: Boolean(deleted),
                   customEnvironment: Boolean(customEnvironment),
                 }))
                 .sort((a, b) => a.uid.localeCompare(b.uid)),
@@ -166,11 +174,19 @@ jobs:
 
           const remaining = await listAllDeployments();
           const remainingPlan = plan(remaining);
+          const remainingActive = remaining.filter(
+            (deployment) =>
+              deployment.state !== "DELETED" &&
+              deployment.readyState !== "DELETED" &&
+              !deployment.deleted,
+          );
+          for (const deployment of remainingActive) {
+            console.log(`Remaining active deployment: ${deployment.uid} (${deployment.target ?? "preview"}, state ${deployment.state}).`);
+          }
           if (
             remainingPlan.retained.uid !== initialPlan.retained.uid ||
             remainingPlan.deletions.length !== 0 ||
-            snapshot(remaining.filter((deployment) => deployment.readyState !== "DELETED")) !==
-              snapshot([initialPlan.retained])
+            snapshot(remainingActive) !== snapshot([initialPlan.retained])
           ) {
             throw new Error("Post-cleanup verification failed; the temporary workflow was not removed.");
           }
